@@ -61,7 +61,9 @@ anime <- function(
 
   spec <- build_scene_spec(built, fps)
 
-  unions <- lapply(spec$layers, function(layer) union_elements(layer$frames))
+  unions <- lapply(spec$layers, function(layer) {
+    union_elements(layer$frames, grouped = geom_is_grouped(layer$geom_class))
+  })
   layer_union_data <- lapply(unions, `[[`, "union_data")
 
   gtable <- render_union_gtable(built, layer_union_data)

@@ -115,6 +115,19 @@ inline_circle <- function(node, r, layer_index, id) {
   xml2::xml_remove(node)
 }
 
+# Data elements of a panel: the `<tag>` nodes inside the panel viewport group
+# that are not grid lines. Axis ticks and legend keys live outside the panel
+# group, so this returns exactly the drawn data, in document (= union) order.
+# GeomPath and GeomPolygon share this because their grobs carry no geom-name id
+# prefix (unlike points/rects) -- only panel membership distinguishes them.
+panel_data_nodes <- function(doc, tag) {
+  xpath <- sprintf(
+    ".//%s[not(starts-with(@id, 'panel.grid')) and ancestor::g[contains(@id, 'panel.') and contains(@id, 'GRID.VP')]]",
+    tag
+  )
+  xml2::xml_find_all(doc, xpath)
+}
+
 # Tag a node with the animation id without changing its element type.
 set_element_id <- function(node, layer_index, id) {
   xml2::xml_set_attr(node, "data-animejs-id", id)

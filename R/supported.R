@@ -9,7 +9,26 @@ supported_transitions <- c(
   "TransitionTime",
   "TransitionReveal"
 )
-supported_geoms <- c("GeomPoint", "GeomCol", "GeomBar", "GeomRect")
+supported_geoms <- c(
+  "GeomPoint",
+  "GeomCol",
+  "GeomBar",
+  "GeomRect",
+  "GeomLine",
+  "GeomPath",
+  "GeomArea",
+  "GeomRibbon",
+  "GeomPolygon"
+)
+
+# Row-group geoms: one element spans many vertex rows, so the correspondence
+# union and per-frame lookup carry every row of a key rather than just the
+# first. GeomLine draws through GeomPath; GeomArea through GeomRibbon.
+grouped_geom_classes <- c("GeomPath", "GeomRibbon", "GeomPolygon")
+
+geom_is_grouped <- function(geom_class) {
+  any(geom_class %in% grouped_geom_classes)
+}
 
 # Pre-build: transition, view, shadow, and every layer geom.
 check_supported_prebuild <- function(plot, call = rlang::caller_env()) {
@@ -61,6 +80,18 @@ check_supported_prebuild <- function(plot, call = rlang::caller_env()) {
       problems,
       x = cli::format_inline("Unsupported geom{?s}: {.val {bad}}."),
       i = cli::format_inline("Supported: {.val {supported_geoms}}.")
+    )
+  }
+
+  # geom_area + transition_time errors inside gganimate's own easing (M0 spike
+  # 3), independent of gganime; point at geom_ribbon, which builds fine.
+  if ("GeomArea" %in% geoms && inherits(tr, "TransitionTime")) {
+    problems <- c(
+      problems,
+      x = cli::format_inline(
+        "{.fn geom_area} with {.fn transition_time} errors inside gganimate."
+      ),
+      i = cli::format_inline("Use {.fn geom_ribbon} instead.")
     )
   }
 

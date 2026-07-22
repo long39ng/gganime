@@ -37,6 +37,34 @@ test_that("track_is_constant detects unchanging tracks", {
   expect_false(track_is_constant(c(3, 4, 3)))
 })
 
+test_that("normalise_vertices pads to the max arity by repeating the last vertex", {
+  verts <- list(
+    matrix(c(0, 1, 0, 1), ncol = 2), # 2 vertices: (0,0), (1,1)
+    matrix(c(0, 1, 2, 0, 1, 2), ncol = 2) # 3 vertices
+  )
+  out <- normalise_vertices(verts)
+  expect_equal(nrow(out[[1]]), 3L)
+  expect_equal(out[[1]][3, ], out[[1]][2, ]) # padded row repeats the last
+  expect_equal(nrow(out[[2]]), 3L) # already at max, unchanged
+  expect_equal(out[[2]], verts[[2]])
+})
+
+test_that("normalise_vertices leaves absent (NULL) frames NULL", {
+  verts <- list(
+    matrix(c(0, 1, 0, 1), ncol = 2),
+    NULL,
+    matrix(c(0, 1, 2, 3, 4, 5), ncol = 2)
+  )
+  out <- normalise_vertices(verts)
+  expect_null(out[[2]])
+  expect_equal(nrow(out[[1]]), 3L)
+})
+
+test_that("vertices_to_points formats and rounds to a points string", {
+  m <- matrix(c(1.234, 5.678, 9.111, 2), ncol = 2, byrow = TRUE)
+  expect_equal(vertices_to_points(m, 1), "1.2,5.7 9.1,2")
+})
+
 test_that("drop_constant_tracks keeps varying tracks and any named keeps", {
   tracks <- list(
     cx = c(1, 2, 3),

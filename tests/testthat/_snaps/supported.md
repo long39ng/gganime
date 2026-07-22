@@ -14,8 +14,18 @@
     Condition
       Error:
       ! This plot uses features gganime cannot render yet:
-      x Unsupported geom: "GeomLine".
-      i Supported: "GeomPoint", "GeomCol", "GeomBar", and "GeomRect".
+      x Unsupported geom: "GeomBoxplot".
+      i Supported: "GeomPoint", "GeomCol", "GeomBar", "GeomRect", "GeomLine", "GeomPath", "GeomArea", "GeomRibbon", and "GeomPolygon".
+
+# geom_area with transition_time is gated with a geom_ribbon pointer
+
+    Code
+      check_supported_prebuild(p)
+    Condition
+      Error:
+      ! This plot uses features gganime cannot render yet:
+      x `geom_area()` with `transition_time()` errors inside gganimate.
+      i Use `geom_ribbon()` instead.
 
 # a gganim with no transition is gated
 

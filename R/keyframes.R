@@ -28,6 +28,41 @@ round_track <- function(values, precision) {
   if (is.numeric(values)) round(values, precision) else values
 }
 
+# Vertex-count normalisation for paths/polygons. A single element's vertex
+# count varies across frames (transformr resamples only within a morph, and a
+# reveal grows the line), but a `points` string can only tween between equal
+# arities. Pad every present frame to the element's max arity by repeating its
+# last vertex; the padding rides at the tail and unfolds one vertex per frame.
+#
+# `verts` is a length-nframes list; each entry is a 2-column (x, y) matrix for a
+# present frame or `NULL` for an absent one. Absent frames stay `NULL`.
+normalise_vertices <- function(verts) {
+  arity <- max(vapply(
+    verts,
+    function(m) if (is.null(m)) 0L else nrow(m),
+    integer(1)
+  ))
+  lapply(verts, function(m) {
+    if (is.null(m) || nrow(m) == 0L) {
+      return(NULL)
+    }
+    if (nrow(m) < arity) {
+      m <- rbind(m, m[rep(nrow(m), arity - nrow(m)), , drop = FALSE])
+    }
+    m
+  })
+}
+
+# Format a 2-column vertex matrix as an SVG `points` string, rounded.
+vertices_to_points <- function(m, precision) {
+  paste0(
+    round(m[, 1], precision),
+    ",",
+    round(m[, 2], precision),
+    collapse = " "
+  )
+}
+
 # A track that never changes can be left on the reference element and dropped
 # from the animation.
 track_is_constant <- function(values) {

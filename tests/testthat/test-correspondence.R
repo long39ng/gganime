@@ -46,3 +46,47 @@ test_that("frame_index maps keys to their row within each frame", {
   expect_equal(unname(idx[u$order == "1\r1"]), 1L)
   expect_true(is.na(idx[["1\r2"]]))
 })
+
+# Grouped mode: two lines, each a row-group of vertices. Line .id 1 grows
+# (2 -> 3 rows), line .id 2 is constant (2 rows) and exits after frame 2.
+make_line_frames <- function() {
+  grp <- function(id, x) {
+    data.frame(
+      PANEL = factor(1),
+      .id = id,
+      x = x,
+      y = x,
+      group = id,
+      stringsAsFactors = FALSE
+    )
+  }
+  list(
+    rbind(grp(1, c(0, 1)), grp(2, c(0, 1))),
+    rbind(grp(1, c(0, 1, 2)), grp(2, c(0, 1))),
+    grp(1, c(0, 1, 2))
+  )
+}
+
+test_that("grouped frame_index carries every vertex row of a key", {
+  u <- union_elements(make_line_frames(), grouped = TRUE)
+  # frame 2: .id 1 is rows 1:3, .id 2 is rows 4:5
+  expect_equal(u$frame_index[[2]][["1\r1"]], 1:3)
+  expect_equal(u$frame_index[[2]][["1\r2"]], 4:5)
+  # frame 3: .id 2 absent -> empty
+  expect_length(u$frame_index[[3]][["1\r2"]], 0L)
+})
+
+test_that("grouped union_data takes each element's max-arity frame", {
+  u <- union_elements(make_line_frames(), grouped = TRUE)
+  # .id 1 peaks at 3 vertices, .id 2 at 2 -> 5 rows total
+  expect_equal(nrow(u$union_data), 5L)
+  expect_equal(as.integer(table(u$union_data$.id)), c(3L, 2L))
+  # group reassigned to a unique integer per element in keys order
+  expect_equal(unique(u$union_data$group), c(1, 2))
+})
+
+test_that("grouped presence tracks the element, not each vertex", {
+  u <- union_elements(make_line_frames(), grouped = TRUE)
+  expect_equal(u$presence[, 1], c(TRUE, TRUE, TRUE))
+  expect_equal(u$presence[, 2], c(TRUE, TRUE, FALSE))
+})
