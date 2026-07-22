@@ -15,7 +15,7 @@
       Error:
       ! This plot uses features gganime cannot render yet:
       x Unsupported geom: "GeomLine".
-      i Supported: "GeomPoint".
+      i Supported: "GeomPoint", "GeomCol", "GeomBar", and "GeomRect".
 
 # a gganim with no transition is gated
 

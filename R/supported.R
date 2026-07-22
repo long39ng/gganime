@@ -9,7 +9,7 @@ supported_transitions <- c(
   "TransitionTime",
   "TransitionReveal"
 )
-supported_geoms <- c("GeomPoint")
+supported_geoms <- c("GeomPoint", "GeomCol", "GeomBar", "GeomRect")
 
 # Pre-build: transition, view, shadow, and every layer geom.
 check_supported_prebuild <- function(plot, call = rlang::caller_env()) {
