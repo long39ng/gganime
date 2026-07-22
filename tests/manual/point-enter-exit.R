@@ -2,7 +2,6 @@
 # widget. One point leaves and another arrives between the two states, so the
 # output exercises absence/hold, presence opacity, and enter/exit fade + grow.
 
-devtools::load_all("../animejs", quiet = TRUE)
 devtools::load_all(".", quiet = TRUE)
 suppressPackageStartupMessages({
   library(ggplot2)

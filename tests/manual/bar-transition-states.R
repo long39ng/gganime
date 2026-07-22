@@ -2,7 +2,6 @@
 # and write a gganimate gif of the same plot for side-by-side comparison. Bars
 # grow, shrink, and reposition as the values change between the two states.
 
-devtools::load_all("../animejs", quiet = TRUE)
 devtools::load_all(".", quiet = TRUE)
 suppressPackageStartupMessages({
   library(ggplot2)

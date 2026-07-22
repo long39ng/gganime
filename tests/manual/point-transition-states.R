@@ -5,11 +5,11 @@
 # becomes an Anime.js keyframe track, and the whole thing is saved as a
 # self-contained HTML widget with a play/scrub control bar.
 
-devtools::load_all("../animejs", quiet = TRUE)
 suppressPackageStartupMessages({
   library(ggplot2)
   library(gganimate)
   library(grid)
+  library(animejs)
 })
 stopifnot(packageVersion("animejs") >= "1.0.0")
 

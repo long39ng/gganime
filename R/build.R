@@ -26,6 +26,7 @@ build_scene_spec <- function(built, fps) {
       nframes = built$scene$nframes,
       fps = fps,
       panels = build_panel_ranges(built),
+      labels = precompute_labels(built),
       built = built
     ),
     class = "gganime_scene_spec"

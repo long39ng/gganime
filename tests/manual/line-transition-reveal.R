@@ -2,7 +2,6 @@
 # animated-SVG widget, and write a gganimate gif of the same plot for
 # side-by-side comparison. Each month's line draws in progressively along Day.
 
-devtools::load_all("../animejs", quiet = TRUE)
 devtools::load_all(".", quiet = TRUE)
 suppressPackageStartupMessages({
   library(ggplot2)

@@ -15,3 +15,5 @@
 ^\.Renviron$
 ^tests/manual$
 \.DS_Store$
+^.*\.Rproj$
+^\.Rproj\.user$

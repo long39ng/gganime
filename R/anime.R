@@ -66,7 +66,8 @@ anime <- function(
   })
   layer_union_data <- lapply(unions, `[[`, "union_data")
 
-  gtable <- render_union_gtable(built, layer_union_data)
+  dynamic_labels <- dynamic_label_names(spec$labels)
+  gtable <- render_union_gtable(built, layer_union_data, dynamic_labels)
   export <- export_scene_svg(gtable, spec$panels)
   affine <- export$panels[["1"]]
 
@@ -95,6 +96,8 @@ anime <- function(
     )
     elements <- c(elements, tracks)
   }
+
+  elements <- c(elements, annotate_labels(export$doc, spec$labels))
 
   svg <- finalize_svg(export$doc)
   timeline <- build_timeline(elements, nframes_real, spec$fps, loop, controls)
