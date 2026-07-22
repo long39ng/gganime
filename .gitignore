@@ -1,0 +1,19 @@
+# R
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+.httr-oauth
+.quarto
+.Renviron
+Rplots.pdf
+*.tar.gz
+*.Rcheck/
+inst/doc
+docs
+/doc/
+/Meta/
+
+# OS
+.DS_Store
+Thumbs.db

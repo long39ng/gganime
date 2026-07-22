@@ -1,0 +1,17 @@
+^LICENSE\.md$
+^[.]?air[.]toml$
+^\.vscode$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^\.github$
+^README\.Rmd$
+^cran-comments\.md$
+^CRAN-SUBMISSION$
+^\.claude$
+^CLAUDE\.md$
+^DEVELOPMENT\.md$
+^skills-lock\.json$
+^\.Renviron$
+^tests/manual$
+\.DS_Store$
