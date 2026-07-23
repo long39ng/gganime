@@ -7,12 +7,14 @@
 #' @param gtable A `gtable` from `render_union_gtable()`.
 #' @param panel_ranges Per-panel data ranges from the scene spec.
 #' @param res Export resolution in dpi.
+#' @param width,height Export device size in inches. The viewBox is then
+#'   `width * res` by `height * res`.
 #' @return A list with `doc` (an xml2 document), `panels` (per-panel affine
 #'   closures + ranges), and `symbols` (the pch symbol table).
 #' @noRd
-export_scene_svg <- function(gtable, panel_ranges, res = 96) {
+export_scene_svg <- function(gtable, panel_ranges, res = 96, width = 7, height = 7) {
   svgpath <- tempfile(fileext = ".svg")
-  grDevices::pdf(NULL)
+  grDevices::pdf(NULL, width = width, height = height)
   grid::grid.newpage()
   grid::grid.draw(gtable)
   grid::grid.force()

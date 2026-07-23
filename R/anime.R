@@ -8,7 +8,8 @@
 #' @param nframes Number of frames to sample the animation at.
 #' @param fps Frames per second, setting the playback speed.
 #' @param duration Optional total duration in seconds; overrides `fps`.
-#' @param width,height Widget size in pixels. `NULL` fills the container.
+#' @param width,height Widget size in pixels, defaulting to 640 by 480. The plot
+#'   is rendered at these dimensions, so their ratio sets the plot's aspect ratio.
 #' @param precision Decimal places to round animated coordinates to.
 #' @param loop Loop the animation: `TRUE`, `FALSE`, or a number of iterations.
 #' @param controls Show a play/pause and scrub control bar.
@@ -33,8 +34,8 @@ anime <- function(
   nframes = 100,
   fps = 10,
   duration = NULL,
-  width = NULL,
-  height = NULL,
+  width = 640,
+  height = 480,
   precision = 2,
   loop = TRUE,
   controls = TRUE,
@@ -56,6 +57,8 @@ anime <- function(
   if (!is.null(height)) {
     check_number(height, "height", min = 0)
   }
+  width <- width %||% 640
+  height <- height %||% 480
   check_bool(controls, "controls")
   if (!is.null(duration)) {
     check_number(duration, "duration", min = 0)
@@ -88,8 +91,19 @@ anime <- function(
   })
 
   dynamic_labels <- dynamic_label_names(spec$labels)
+  # Export at the widget's pixel size (converted to inches at the export
+  # resolution) so the SVG viewBox has the same aspect ratio as the widget. The
+  # plot is then laid out for that shape and shown at its intended size, rather
+  # than a fixed square scaled down to fit.
+  res <- 96
   gtable <- render_union_gtable(built, layer_union_data, dynamic_labels)
-  export <- export_scene_svg(gtable, spec$panels)
+  export <- export_scene_svg(
+    gtable,
+    spec$panels,
+    res = res,
+    width = width / res,
+    height = height / res
+  )
   affine <- export$panels[["1"]]
 
   elements <- list()

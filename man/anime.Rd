@@ -9,8 +9,8 @@ anime(
   nframes = 100,
   fps = 10,
   duration = NULL,
-  width = NULL,
-  height = NULL,
+  width = 640,
+  height = 480,
   precision = 2,
   loop = TRUE,
   controls = TRUE,
@@ -27,7 +27,8 @@ anime(
 
 \item{duration}{Optional total duration in seconds; overrides \code{fps}.}
 
-\item{width, height}{Widget size in pixels. \code{NULL} fills the container.}
+\item{width, height}{Widget size in pixels, defaulting to 640 by 480. The plot
+is rendered at these dimensions, so their ratio sets the plot's aspect ratio.}
 
 \item{precision}{Decimal places to round animated coordinates to.}
 
