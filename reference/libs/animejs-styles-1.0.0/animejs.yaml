@@ -1,0 +1,14 @@
+dependencies:
+  - name: anime
+    version: 4.5.0
+    src: htmlwidgets/lib
+    script: anime.esm.min.js
+  # Styles for the controls bar. This is a distinct dependency name on purpose:
+  # htmlwidgets already generates an "animejs-binding" dependency (versioned at
+  # the package version) for the binding script, so reusing that name here would
+  # collide and the higher-versioned auto entry, which has no stylesheet, would
+  # win and drop the CSS.
+  - name: animejs-styles
+    version: 1.0.0
+    src: htmlwidgets
+    stylesheet: animejs.css

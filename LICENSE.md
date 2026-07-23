@@ -13,11 +13,6 @@ the following conditions:
 The above copyright notice and this permission notice shall be included
 in all copies or substantial portions of the Software.
 
-Portions of this package are adapted from the gganimate package
-(<https://github.com/thomasp85/gganimate>), Copyright (c) Posit
-Software, PBC, also under the MIT License. Adapted sites are marked with
-a `# Adapted from gganimate (MIT)` comment.
-
 THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS
 OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.

@@ -1,0 +1,130 @@
+/* Self-contained controls bar. Everything is reset and restyled here so the
+ * bar looks the same across engines and does not inherit a host page's button
+ * or range styling (e.g. Bootstrap on a pkgdown site). */
+
+.animejs-controls {
+	--animejs-accent: #2563eb;
+	--animejs-track: rgba(0, 0, 0, 0.16);
+	--animejs-thumb: 14px;
+	--animejs-rail: 4px;
+
+	box-sizing: border-box;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 2px;
+	font-size: 0;
+}
+
+.animejs-controls * {
+	box-sizing: border-box;
+}
+
+/* Play / pause button */
+.animejs-controls button {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	margin: 0;
+	padding: 0;
+	border: 1px solid var(--animejs-track);
+	border-radius: 6px;
+	background: #fff;
+	color: #333;
+	line-height: 0;
+	cursor: pointer;
+	box-shadow: none;
+	-webkit-appearance: none;
+	appearance: none;
+}
+
+.animejs-controls button:hover {
+	background: #f2f2f2;
+}
+
+.animejs-controls button:focus-visible {
+	outline: 2px solid var(--animejs-accent);
+	outline-offset: 1px;
+}
+
+/* Scrub bar */
+.animejs-controls input[type="range"] {
+	--animejs-pct: 0%;
+
+	flex: 1 1 auto;
+	min-width: 0;
+	height: var(--animejs-thumb);
+	margin: 0;
+	padding: 0;
+	background: transparent;
+	cursor: pointer;
+	-webkit-appearance: none;
+	appearance: none;
+}
+
+.animejs-controls input[type="range"]:focus {
+	outline: none;
+}
+
+/* Track: a hard-stop gradient gives the filled look identically in both
+ * engines (--animejs-pct is set from JavaScript as the value changes). */
+.animejs-controls input[type="range"]::-webkit-slider-runnable-track {
+	height: var(--animejs-rail);
+	border-radius: 999px;
+	background: linear-gradient(
+		to right,
+		var(--animejs-accent) var(--animejs-pct),
+		var(--animejs-track) var(--animejs-pct)
+	);
+}
+
+.animejs-controls input[type="range"]::-moz-range-track {
+	height: var(--animejs-rail);
+	border-radius: 999px;
+	background: linear-gradient(
+		to right,
+		var(--animejs-accent) var(--animejs-pct),
+		var(--animejs-track) var(--animejs-pct)
+	);
+}
+
+/* Firefox otherwise paints its own accent fill on top of the track. */
+.animejs-controls input[type="range"]::-moz-range-progress {
+	height: var(--animejs-rail);
+	background: transparent;
+}
+
+/* Thumb */
+.animejs-controls input[type="range"]::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: var(--animejs-thumb);
+	height: var(--animejs-thumb);
+	/* centre the thumb on the rail: -(thumb - rail) / 2 */
+	margin-top: calc((var(--animejs-rail) - var(--animejs-thumb)) / 2);
+	border: 2px solid #fff;
+	border-radius: 50%;
+	background: var(--animejs-accent);
+	box-shadow: 0 0 1px rgba(0, 0, 0, 0.4);
+}
+
+.animejs-controls input[type="range"]::-moz-range-thumb {
+	width: var(--animejs-thumb);
+	height: var(--animejs-thumb);
+	border: 2px solid #fff;
+	border-radius: 50%;
+	background: var(--animejs-accent);
+	box-shadow: 0 0 1px rgba(0, 0, 0, 0.4);
+}
+
+.animejs-controls input[type="range"]:focus-visible::-webkit-slider-thumb {
+	box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35);
+}
+
+.animejs-controls input[type="range"]:focus-visible::-moz-range-thumb {
+	box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35);
+}

@@ -35,20 +35,33 @@ pak::pak("long39ng/gganime")
 Write the plot exactly as you would with gganimate, then call
 [`anime()`](https://long39ng.github.io/gganime/reference/anime.md)
 instead of [`animate()`](https://gganimate.com/reference/animate.html).
+Here
+[`transition_time()`](https://gganimate.com/reference/transition_time.html)
+animates over a continuous variable, sizing each country’s bubble by
+population and filling in the `{frame_time}` label between years:
 
 ``` r
 
 library(ggplot2)
 library(gganimate)
+library(gapminder)
 library(gganime)
 
-p <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
-  geom_point(size = 3) +
-  transition_states(gear, transition_length = 2, state_length = 1) +
-  labs(title = "Gear: {closest_state}")
+p <- ggplot(gapminder, aes(gdpPercap, lifeExp, size = pop, colour = country)) +
+  geom_point(alpha = 0.7, show.legend = FALSE) +
+  scale_colour_manual(values = country_colors) +
+  scale_size(range = c(2, 12)) +
+  scale_x_log10() +
+  labs(title = "Year: {frame_time}", x = "GDP per capita", y = "life expectancy") +
+  transition_time(year) +
+  ease_aes("linear")
 
 anime(p)
 ```
+
+![Bubble chart of life expectancy against GDP per capita, one bubble per
+country sized by population, animating across
+years.](reference/figures/README-gapminder.gif)
 
 A [`shadow_mark()`](https://gganimate.com/reference/shadow_mark.html)
 leaves earlier frames behind the current one:
@@ -63,6 +76,10 @@ p <- ggplot(airquality, aes(Day, Temp)) +
 
 anime(p)
 ```
+
+![Scatterplot of daily temperature over a month, with earlier days left
+behind in grey as the animation
+advances.](reference/figures/README-shadow.gif)
 
 [`anime()`](https://long39ng.github.io/gganime/reference/anime.md)
 returns an htmlwidget, so it prints in the RStudio Viewer, embeds in R
