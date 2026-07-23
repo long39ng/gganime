@@ -34,11 +34,115 @@ export_scene_svg <- function(gtable, panel_ranges, res = 96, width = 7, height =
     xml2::xml_remove(s)
   }
 
+  # gridSVG renders text in a rotated/flipped viewport (axis titles, plot
+  # title/subtitle/caption) as MathML in a fixed-size <foreignObject> that the
+  # browser clips. Convert each to a plain <text>, keyed to the title's own
+  # justification read from the gtable.
+  aligns <- title_alignments(gtable)
+  for (fo in xml2::xml_find_all(doc, ".//foreignObject")) {
+    foreign_object_to_text(fo, aligns)
+  }
+
   list(
     doc = doc,
     panels = panel_affines(exp, panel_ranges, res),
     symbols = symbol_table(doc)
   )
+}
+
+# hjust/vjust of each title grob (axis titles, plot title/subtitle/caption),
+# keyed by the grob-name prefix shared with the exported SVG id.
+title_alignments <- function(gtable) {
+  out <- list()
+  for (g in gtable$grobs) {
+    if (!inherits(g, "titleGrob")) {
+      next
+    }
+    key <- sub("\\.\\.titleGrob.*$", "", g$name %||% "")
+    txt <- g$children[[1]]
+    if (!is.null(txt$hjust) || !is.null(txt$vjust)) {
+      out[[key]] <- list(hjust = txt$hjust, vjust = txt$vjust)
+    }
+  }
+  out
+}
+
+# Replace a gridSVG MathML title (<switch><foreignObject><math>...) with a plain
+# <text>. The enclosing translate/scale already positions the alignment anchor,
+# so the <text> only needs the matching text-anchor and, for a rotated title,
+# the foreignObject's rotate transform.
+foreign_object_to_text <- function(fo, aligns) {
+  mtext <- xml2::xml_find_first(fo, ".//mtext")
+  if (inherits(mtext, "xml_missing")) {
+    return(invisible())
+  }
+
+  target <- xml2::xml_parent(fo)
+  if (!identical(xml2::xml_name(target), "switch")) {
+    target <- fo
+  }
+
+  align <- foreign_object_align(fo, aligns)
+  new <- xml2::xml_add_sibling(target, "text", .where = "after")
+  xml2::xml_set_attr(new, "x", "0")
+  xml2::xml_set_attr(new, "y", "0")
+  xml2::xml_set_attr(new, "text-anchor", align$anchor)
+  xml2::xml_set_attr(new, "dominant-baseline", align$baseline)
+  for (a in c("font-size", "font-family", "font-weight", "font-style", "fill", "fill-opacity")) {
+    v <- xml2::xml_attr(fo, a)
+    if (!is.na(v)) {
+      xml2::xml_set_attr(new, a, v)
+    }
+  }
+  tr <- xml2::xml_attr(fo, "transform")
+  if (!is.na(tr)) {
+    xml2::xml_set_attr(new, "transform", tr)
+  }
+  xml2::xml_set_text(new, xml2::xml_text(mtext))
+
+  xml2::xml_remove(target)
+  invisible()
+}
+
+# text-anchor and dominant-baseline for a converted title, from its own
+# hjust/vjust. gridSVG places the anchor at the (hjust, vjust) point of the text
+# box, so the <text> aligns to it from the matching edge: hjust 0/0.5/1 ->
+# start/middle/end, vjust 0/0.5/1 -> after-edge/central/before-edge. The rotate
+# transform (kept from the foreignObject) orients a rotated title, so this
+# reproduces e.g. a right-aligned y-axis title sitting at the top.
+foreign_object_align <- function(fo, aligns) {
+  ids <- xml2::xml_attr(xml2::xml_find_all(fo, "ancestor::g[@id]"), "id")
+  for (id in rev(ids)) {
+    a <- aligns[[sub("\\.\\.titleGrob.*$", "", id)]]
+    if (!is.null(a)) {
+      return(list(anchor = hjust_anchor(a$hjust), baseline = vjust_baseline(a$vjust)))
+    }
+  }
+  list(anchor = "middle", baseline = "central")
+}
+
+hjust_anchor <- function(hjust) {
+  if (is.null(hjust)) {
+    "middle"
+  } else if (hjust <= 0.25) {
+    "start"
+  } else if (hjust >= 0.75) {
+    "end"
+  } else {
+    "middle"
+  }
+}
+
+vjust_baseline <- function(vjust) {
+  if (is.null(vjust)) {
+    "central"
+  } else if (vjust <= 0.25) {
+    "text-after-edge"
+  } else if (vjust >= 0.75) {
+    "text-before-edge"
+  } else {
+    "central"
+  }
 }
 
 # Data->SVG affine per panel. The panel viewport's own scales are [0, 1] on
