@@ -6,6 +6,7 @@
 ^pkgdown$
 ^\.github$
 ^README\.Rmd$
+^tools$
 ^cran-comments\.md$
 ^CRAN-SUBMISSION$
 ^\.claude$

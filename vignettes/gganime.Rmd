@@ -1,0 +1,193 @@
+---
+title: "Introduction to gganime"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to gganime}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  out.width = "100%"
+)
+
+# Fall back to code-only if the render dependencies are missing.
+render_ok <- requireNamespace("gganimate", quietly = TRUE) &&
+  requireNamespace("gridSVG", quietly = TRUE) &&
+  requireNamespace("animejs", quietly = TRUE)
+```
+
+gganime takes a ggplot2 plot written with [gganimate](https://gganimate.com)
+syntax and renders it as an animated SVG. You build the plot the same way you
+would for gganimate, then call `anime()` in place of `animate()`. The output is
+a self-contained HTML widget: one vector drawing of the scene with a timeline
+over its elements, played in the browser.
+
+gganime reuses gganimate's build machinery unchanged and only replaces the
+final rendering step, so the [gganimate documentation](https://gganimate.com)
+remains the reference for the grammar itself.
+
+The animations below are live. Drag the scrub bar, or use the play and pause
+control, to step through a frame at a time.
+
+## Your first animation
+
+Start from a static plot.
+
+```{r, eval = render_ok}
+library(ggplot2)
+library(gganimate)
+library(gganime)
+
+p <- ggplot(iris, aes(Petal.Width, Petal.Length)) +
+  geom_point()
+```
+
+Add a transition to animate it. `transition_states()` splits the data by a
+discrete variable and moves the points between the resulting states.
+
+```{r, eval = render_ok}
+anim <- p +
+  transition_states(Species, transition_length = 2, state_length = 1)
+```
+
+To see the animation with gganimate you would print the object or call
+`animate()`. With gganime you call `anime()`:
+
+```{r, eval = render_ok}
+anime(anim, nframes = 30)
+```
+
+## Transitions
+
+gganime supports three of gganimate's transitions.
+
+`transition_states()`, above, animates between the levels of a discrete
+variable.
+
+`transition_time()` animates along a continuous variable, holding it to the
+data range so the spacing between frames matches the spacing between values.
+
+```{r, eval = render_ok}
+aq <- ggplot(airquality, aes(Day, Temp)) +
+  geom_point() +
+  transition_time(Month)
+
+anime(aq, nframes = 30)
+```
+
+`transition_reveal()` keeps earlier data on screen and reveals the rest along a
+dimension, which suits a line growing over time.
+
+```{r, eval = render_ok}
+ec <- ggplot(economics, aes(date, unemploy)) +
+  geom_line() +
+  transition_reveal(date)
+
+anime(ec, nframes = 40)
+```
+
+## Frame labels
+
+A transition exposes a set of per-frame variables. Insert them into the title,
+subtitle, or caption with [glue](https://glue.tidyverse.org) syntax, and the
+text is swapped frame by frame in step with the geometry.
+
+```{r, eval = render_ok}
+aq_labelled <- ggplot(airquality, aes(Day, Temp)) +
+  geom_point() +
+  transition_time(Month) +
+  labs(title = "Month: {frame_time}")
+
+anime(aq_labelled, nframes = 30)
+```
+
+Each transition provides different variables. `transition_states()` gives
+`closest_state`; `transition_time()` gives `frame_time`;
+`transition_reveal()` gives `frame_along`. All three also provide `frame`,
+`nframes`, and `progress`.
+
+## Easing, entering, and exiting
+
+`ease_aes()` sets how an aesthetic moves between values across a transition. The
+default is linear; naming an aesthetic gives it its own easing.
+
+```{r, eval = render_ok}
+anime(anim + ease_aes("cubic-in-out"), nframes = 30)
+```
+
+`enter_*()` and `exit_*()` control how data that appears or leaves is drawn, so
+its entrance and exit can be animated.
+
+```{r, eval = render_ok}
+anim_species <- ggplot(iris, aes(Petal.Width, Petal.Length)) +
+  geom_point(aes(colour = Species), size = 2) +
+  transition_states(Species, transition_length = 2, state_length = 1)
+
+anime(anim_species + enter_fade() + exit_shrink(), nframes = 30)
+```
+
+## Leaving a trail
+
+`shadow_mark()` keeps the marks from earlier frames on screen behind the current
+one, so a scatter builds up as it advances.
+
+```{r, eval = render_ok}
+aq_shadow <- ggplot(airquality, aes(Day, Temp)) +
+  geom_point() +
+  transition_time(Month) +
+  shadow_mark(colour = "grey70") +
+  labs(title = "Month: {frame_time}")
+
+anime(aq_shadow, nframes = 30)
+```
+
+## Controlling the render
+
+gganime fixes the frame count and playback speed when you call `anime()`, the
+same way gganimate does at `animate()`:
+
+- `nframes` sets how many frames the animation is sampled at (default `100`).
+- `fps` sets the playback speed in frames per second (default `10`), or give
+  `duration` in seconds to set the speed from the total length.
+- `loop` repeats the animation: `TRUE`, `FALSE`, or a number of iterations.
+- `controls` shows or hides the play and scrub bar.
+- `width` and `height` fix the widget size in pixels; leaving them `NULL` lets
+  it fill its container.
+- `precision` rounds the animated coordinates, which trims the file size.
+
+```{r, eval = render_ok}
+anime(anim, nframes = 50, duration = 4, loop = FALSE)
+```
+
+## Saving and embedding
+
+`anime()` returns an htmlwidget, so it prints in the RStudio Viewer, knits into
+R Markdown and Quarto documents, and saves to a standalone HTML file with
+`htmlwidgets::saveWidget()`:
+
+```{r, eval = FALSE}
+htmlwidgets::saveWidget(anime(anim), "iris.html")
+```
+
+Loading gganime also makes a bare gganimate plot print through `anime()` at the
+console, so printing `anim` gives the widget without an explicit call. Set
+`options(gganime.autoprint = FALSE)` to keep gganimate's own output.
+
+In Shiny, pair `renderGganime()` in the server with `gganimeOutput()` in the UI.
+
+## Supported features
+
+- Transitions: `transition_states()`, `transition_time()`,
+  `transition_reveal()`.
+- Geoms: points, lines and paths, bars and columns, areas and ribbons.
+- `enter_*()` and `exit_*()`, `ease_aes()`, and per-frame labels in the title,
+  subtitle, and caption.
+- `shadow_mark()`.
+
+Anything else stops with a message naming an alternative. Current limits include
+faceted plots (only one panel renders), non-Cartesian coordinate systems,
+`shadow_wake()` and `shadow_trail()`, and `view_*()` other than `view_static()`.
