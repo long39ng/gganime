@@ -40,3 +40,7 @@ gganimate::shadow_mark
 #' @importFrom gganimate shadow_null
 #' @export
 gganimate::shadow_null
+
+#' @importFrom gganimate animate
+#' @export
+gganimate::animate

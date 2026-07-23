@@ -30,8 +30,26 @@ test_that("shadow_wake is gated with a shadow_mark pointer", {
   expect_snapshot(check_supported_prebuild(p), error = TRUE)
 })
 
-test_that("a gganim with no transition is gated", {
+test_that("a gganim with no transition is rejected", {
   # enter_fade() makes it a gganim but installs no transition.
   p <- ggplot(mtcars, aes(mpg, wt)) + geom_point() + enter_fade()
   expect_snapshot(check_supported_prebuild(p), error = TRUE)
+})
+
+test_that("a faceted plot is rejected post-build", {
+  skip_if_not_installed("gridSVG")
+  p <- ggplot(mtcars, aes(mpg, wt)) +
+    geom_point() +
+    facet_wrap(~gear) +
+    transition_states(cyl)
+  expect_snapshot(anime(p), error = TRUE)
+})
+
+test_that("a non-Cartesian coord is rejected post-build", {
+  skip_if_not_installed("gridSVG")
+  p <- ggplot(mtcars, aes(mpg, wt)) +
+    geom_point() +
+    coord_polar() +
+    transition_states(cyl)
+  expect_snapshot(anime(p), error = TRUE)
 })

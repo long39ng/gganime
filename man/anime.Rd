@@ -47,3 +47,15 @@ Builds a ggplot2 plot written with gganimate syntax and renders it as a
 self-contained, resolution-independent animated-SVG htmlwidget powered by
 Anime.js, instead of gganimate's frame-by-frame output.
 }
+\examples{
+library(ggplot2)
+library(gganimate)
+
+p <- ggplot(mtcars, aes(mpg, wt)) +
+  geom_point(aes(colour = factor(cyl))) +
+  transition_states(gear)
+
+\donttest{
+anime(p, nframes = 20)
+}
+}

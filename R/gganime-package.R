@@ -3,5 +3,6 @@
 
 ## usethis namespace: start
 #' @importFrom rlang %||%
+#' @importFrom utils getS3method
 ## usethis namespace: end
 NULL

@@ -16,6 +16,17 @@
 #' @param ... Unused; reserved for future arguments.
 #'
 #' @return An `htmlwidget` of class `gganime`.
+#' @examples
+#' library(ggplot2)
+#' library(gganimate)
+#'
+#' p <- ggplot(mtcars, aes(mpg, wt)) +
+#'   geom_point(aes(colour = factor(cyl))) +
+#'   transition_states(gear)
+#'
+#' \donttest{
+#' anime(p, nframes = 20)
+#' }
 #' @export
 anime <- function(
   plot,

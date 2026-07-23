@@ -4,14 +4,15 @@
 \name{gganime-package}
 \alias{gganime}
 \alias{gganime-package}
-\title{gganime: Animated 'ggplot2' Plots as Animated-SVG Widgets}
+\title{gganime: Animate 'ggplot2' Plots with 'Anime.js'}
 \description{
-Renders 'ggplot2' plots written with 'gganimate' syntax as self-contained, resolution-independent animated-SVG 'htmlwidgets' powered by 'Anime.js', instead of a frame-by-frame GIF or video.
+Renders 'ggplot2' plots written with 'gganimate' syntax as animated Scalable Vector Graphics (SVG) drawn in the browser by the 'Anime.js' JavaScript library (\url{https://animejs.com}), through the 'animejs' package. The result is a single self-contained, resolution-independent 'htmlwidget' with one timeline over the plot's elements.
 }
 \seealso{
 Useful links:
 \itemize{
   \item \url{https://github.com/long39ng/gganime}
+  \item \url{https://long39ng.github.io/gganime/}
   \item Report bugs at \url{https://github.com/long39ng/gganime/issues}
 }
 

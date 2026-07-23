@@ -124,7 +124,10 @@ check_supported_postbuild <- function(built, call = rlang::caller_env()) {
     problems <- c(
       problems,
       x = cli::format_inline(
-        "Faceted plots are not supported yet."
+        "Faceted plots are not supported yet; only a single panel renders."
+      ),
+      i = cli::format_inline(
+        "Drop {.fn facet_wrap}/{.fn facet_grid}, or animate each facet separately."
       )
     )
   }

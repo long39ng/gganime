@@ -37,7 +37,7 @@
       x Shadow <ShadowWake> is not supported yet.
       i Supported: `shadow_mark()` and `shadow_null()`.
 
-# a gganim with no transition is gated
+# a gganim with no transition is rejected
 
     Code
       check_supported_prebuild(p)
@@ -46,4 +46,23 @@
       ! This plot uses features gganime cannot render yet:
       x Transition <TransitionNull> is not supported yet.
       i Supported: "TransitionStates", "TransitionTime", and "TransitionReveal".
+
+# a faceted plot is rejected post-build
+
+    Code
+      anime(p)
+    Condition
+      Error in `anime()`:
+      ! This plot uses features gganime cannot render yet:
+      x Faceted plots are not supported yet; only a single panel renders.
+      i Drop `facet_wrap()`/`facet_grid()`, or animate each facet separately.
+
+# a non-Cartesian coord is rejected post-build
+
+    Code
+      anime(p)
+    Condition
+      Error in `anime()`:
+      ! This plot uses features gganime cannot render yet:
+      x Coordinate system <CoordPolar> is not supported; only `coord_cartesian()`.
 

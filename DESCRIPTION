@@ -5,10 +5,14 @@ Authors@R:
     person("Long", "Nguyen", , "nguyen@dezim-institut.de", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-8878-7386"))
 Description: Renders 'ggplot2' plots written with 'gganimate' syntax as
-    self-contained, resolution-independent animated-SVG 'htmlwidgets'
-    powered by 'Anime.js' (<https://animejs.com>).
+    animated Scalable Vector Graphics (SVG) drawn in the browser by the
+    'Anime.js' JavaScript library (<https://animejs.com>), through the
+    'animejs' package. The result is a single self-contained,
+    resolution-independent 'htmlwidget' with one timeline over the plot's
+    elements.
 License: MIT + file LICENSE
-URL: https://github.com/long39ng/gganime
+URL: https://github.com/long39ng/gganime,
+    https://long39ng.github.io/gganime/
 BugReports: https://github.com/long39ng/gganime/issues
 Depends:
     R (>= 4.1.0)
@@ -20,8 +24,8 @@ Imports:
     grDevices,
     grid,
     gridSVG (>= 1.7-5),
-    htmlwidgets,
     rlang,
+    utils,
     xml2
 Suggests:
     jsonlite,
