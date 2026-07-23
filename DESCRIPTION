@@ -1,12 +1,12 @@
 Package: gganime
-Title: Animated 'ggplot2' Plots as Animated-SVG Widgets
+Title: Animate 'ggplot2' Plots with 'Anime.js'
 Version: 0.0.0.9000
 Authors@R: 
     person("Long", "Nguyen", , "nguyen@dezim-institut.de", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-8878-7386"))
 Description: Renders 'ggplot2' plots written with 'gganimate' syntax as
     self-contained, resolution-independent animated-SVG 'htmlwidgets'
-    powered by 'Anime.js', instead of a frame-by-frame GIF or video.
+    powered by 'Anime.js' (<https://animejs.com>).
 License: MIT + file LICENSE
 URL: https://github.com/long39ng/gganime
 BugReports: https://github.com/long39ng/gganime/issues

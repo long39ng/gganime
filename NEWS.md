@@ -1,5 +1,11 @@
 # gganime (development version)
 
+* `anime()` supports `shadow_mark()`. The raw data of other frames is drawn as
+  static background marks behind the current frame: `past` accumulates earlier
+  frames, `future` recedes through later ones, `exclude_layer` drops layers, and
+  aesthetic arguments (e.g. `colour = "grey"`) restyle the shadow. `shadow_wake()`
+  and `shadow_trail()` remain unsupported.
+
 * `anime()` animates per-frame plot labels. Title, subtitle, and caption glue
   strings (`{frame_time}`, `{closest_state}`, `{frame_along}`, `frame`,
   `nframes`, `progress`, ...) swap in sync with the scrubber via Anime.js text

@@ -9,6 +9,10 @@ supported_transitions <- c(
   "TransitionTime",
   "TransitionReveal"
 )
+supported_shadows <- c(
+  "ShadowNull",
+  "ShadowMark"
+)
 supported_geoms <- c(
   "GeomPoint",
   "GeomCol",
@@ -63,12 +67,15 @@ check_supported_prebuild <- function(plot, call = rlang::caller_env()) {
   }
 
   shadow <- plot$shadow
-  if (!is.null(shadow) && !inherits(shadow, "ShadowNull")) {
+  if (!is.null(shadow) && !inherits(shadow, supported_shadows)) {
     cls <- class(shadow)[1]
     problems <- c(
       problems,
       x = cli::format_inline(
         "Shadow {.cls {cls}} is not supported yet."
+      ),
+      i = cli::format_inline(
+        "Supported: {.fn shadow_mark} and {.fn shadow_null}."
       )
     )
   }

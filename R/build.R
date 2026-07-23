@@ -27,9 +27,28 @@ build_scene_spec <- function(built, fps) {
       fps = fps,
       panels = build_panel_ranges(built),
       labels = precompute_labels(built),
+      shadows = build_shadow_spec(built),
       built = built
     ),
     class = "gganime_scene_spec"
+  )
+}
+
+# Shadow spec: NULL unless the plot carries a shadow_mark(). ShadowMark's train
+# hook has already stored the raw-phase rows (styled by the aesthetic dots) with
+# a `.frame` column per layer in `built$scene$shadow_params$raw`, so the spec
+# only forwards the consumable pieces. R/shadows.R turns these into elements.
+build_shadow_spec <- function(built) {
+  shadow <- built$plot$shadow
+  if (is.null(shadow) || !inherits(shadow, "ShadowMark")) {
+    return(NULL)
+  }
+  sp <- built$scene$shadow_params
+  list(
+    past = isTRUE(sp$past),
+    future = isTRUE(sp$future),
+    raw = sp$raw,
+    nframes = sp$nframes
   )
 }
 

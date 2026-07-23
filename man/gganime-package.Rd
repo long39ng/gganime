@@ -24,11 +24,5 @@ Authors:
   \item Long Nguyen \email{nguyen@dezim-institut.de} (\href{https://orcid.org/0000-0001-8878-7386}{ORCID})
 }
 
-Other contributors:
-\itemize{
-  \item Thomas Lin Pedersen (Author of gganimate, small portions of which are adapted here) [contributor]
-  \item Posit Software, PBC (Copyright holder of gganimate) [copyright holder]
-}
-
 }
 \keyword{internal}

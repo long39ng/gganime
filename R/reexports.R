@@ -32,3 +32,11 @@ gganimate::exit_fade
 #' @importFrom gganimate exit_shrink
 #' @export
 gganimate::exit_shrink
+
+#' @importFrom gganimate shadow_mark
+#' @export
+gganimate::shadow_mark
+
+#' @importFrom gganimate shadow_null
+#' @export
+gganimate::shadow_null

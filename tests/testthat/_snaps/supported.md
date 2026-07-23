@@ -27,6 +27,16 @@
       x `geom_area()` with `transition_time()` errors inside gganimate.
       i Use `geom_ribbon()` instead.
 
+# shadow_wake is gated with a shadow_mark pointer
+
+    Code
+      check_supported_prebuild(p)
+    Condition
+      Error:
+      ! This plot uses features gganime cannot render yet:
+      x Shadow <ShadowWake> is not supported yet.
+      i Supported: `shadow_mark()` and `shadow_null()`.
+
 # a gganim with no transition is gated
 
     Code
