@@ -55,6 +55,26 @@
   which each set of aesthetics occurs. Where that cannot be verified
   against the layer’s groups, the boundary is left as before.
 
+- [`geom_line()`](https://ggplot2.tidyverse.org/reference/geom_path.html),
+  [`geom_path()`](https://ggplot2.tidyverse.org/reference/geom_path.html),
+  [`geom_area()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html),
+  and
+  [`geom_polygon()`](https://ggplot2.tidyverse.org/reference/geom_polygon.html)
+  work with
+  [`transition_states()`](https://gganimate.com/reference/transition_states.html).
+  gganimate holds the first state before it labels the layer’s elements,
+  so those held frames arrived labelled one id per vertex rather than
+  one per line, which left
+  [`anime()`](https://long39ng.github.io/gganime/reference/anime.md)
+  expecting more elements than the plot draws: “Line element count does
+  not match the union.”
+
+- A line or polygon starts on the shape of its first frame. The
+  reference drawing was taken from the frame with the most vertices, and
+  Anime.js holds the drawn attribute over the first frame interval, so
+  the animation opened on that frame’s shape and scrubbing to the start
+  showed it too.
+
 - Text in the exported SVG keeps its position when the host page sets
   `white-space: pre`, which pkgdown does for the output of an example.
   Firefox otherwise preserved gridSVG’s indentation and pushed tick
