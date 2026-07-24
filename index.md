@@ -43,7 +43,6 @@ population and filling in the `{frame_time}` label between years:
 ``` r
 
 library(ggplot2)
-library(gganimate)
 library(gapminder)
 library(gganime)
 
@@ -109,8 +108,5 @@ and
 
 Anything else stops with a message naming the alternative. Current
 limits include faceted plots (only a single panel renders),
-non-Cartesian coordinate systems,
-[`shadow_wake()`](https://gganimate.com/reference/shadow_wake.html) /
-[`shadow_trail()`](https://gganimate.com/reference/shadow_trail.html),
-and `view_*()` other than
-[`view_static()`](https://gganimate.com/reference/view_static.html).
+non-Cartesian coordinate systems, `shadow_wake()` / `shadow_trail()`,
+and `view_*()` other than `view_static()`.

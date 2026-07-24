@@ -23,12 +23,6 @@ Start from a static plot.
 ``` r
 
 library(ggplot2)
-library(gganimate)
-#> No renderer backend detected. gganimate will default to writing frames to separate files
-#> Consider installing:
-#> - the `gifski` package for gif output
-#> - the `av` package for video output
-#> and restarting the R session
 library(gganime)
 
 p <- ggplot(iris, aes(Petal.Width, Petal.Length)) +
@@ -74,7 +68,6 @@ aq <- ggplot(airquality, aes(Day, Temp)) +
   transition_time(Month)
 
 anime(aq, nframes = 30)
-#> Warning in FUN(X[[i]], ...): NAs introduced by coercion
 ```
 
 [`transition_reveal()`](https://gganimate.com/reference/transition_reveal.html)
@@ -105,7 +98,6 @@ aq_labelled <- ggplot(airquality, aes(Day, Temp)) +
   labs(title = "Month: {frame_time}")
 
 anime(aq_labelled, nframes = 30)
-#> Warning in FUN(X[[i]], ...): NAs introduced by coercion
 ```
 
 Each transition provides different variables.
@@ -155,7 +147,6 @@ aq_shadow <- ggplot(airquality, aes(Day, Temp)) +
   labs(title = "Month: {frame_time}")
 
 anime(aq_shadow, nframes = 30)
-#> Warning in FUN(X[[i]], ...): NAs introduced by coercion
 ```
 
 ## Controlling the render
@@ -220,8 +211,5 @@ in the UI.
 
 Anything else stops with a message naming an alternative. Current limits
 include faceted plots (only one panel renders), non-Cartesian coordinate
-systems,
-[`shadow_wake()`](https://gganimate.com/reference/shadow_wake.html) and
-[`shadow_trail()`](https://gganimate.com/reference/shadow_trail.html),
-and `view_*()` other than
-[`view_static()`](https://gganimate.com/reference/view_static.html).
+systems, `shadow_wake()` and `shadow_trail()`, and `view_*()` other than
+`view_static()`.
