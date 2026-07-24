@@ -82,6 +82,49 @@ test_that("repair_frame_ids leaves grouped layers and untweened frames alone", {
   expect_equal(repair_frame_ids(bare), bare)
 })
 
+# A path layer as gganimate hands it over: `keep_state()` runs before the first
+# `transform_path()`, so the held frames of the first state are labelled one id
+# per vertex, and every later frame one id per element.
+make_path_frames <- function() {
+  vertices <- data.frame(
+    PANEL = factor(rep(1, 5)),
+    x = c(1, 2, 3, 4, 5),
+    y = c(1, 2, 3, 4, 5),
+    group = c(1L, 1L, 2L, 2L, 2L)
+  )
+  frame <- function(id, phase, group) {
+    cbind(
+      vertices["PANEL"],
+      vertices[c("x", "y")],
+      group = group,
+      .id = id,
+      .phase = phase
+    )
+  }
+  list(
+    frame(1:5, "static", c(1L, 1L, 2L, 2L, 2L)),
+    frame(1:5, "static", c(3L, 3L, 4L, 4L, 4L)),
+    frame(c(1, 1, 2, 2, 2), "raw", c(5L, 5L, 6L, 6L, 6L))
+  )
+}
+
+test_that("repair_frame_ids relabels vertex-labelled leading frames per element", {
+  out <- repair_frame_ids(make_path_frames(), grouped = TRUE)
+  expect_equal(out[[1]]$.id, c(1, 1, 2, 2, 2))
+  expect_equal(out[[2]]$.id, c(1, 1, 2, 2, 2))
+  expect_equal(out[[3]]$.id, c(1, 1, 2, 2, 2))
+  # two lines, not five single-vertex elements plus two lines
+  u <- union_elements(out, grouped = TRUE)
+  expect_equal(ncol(u$presence), 2L)
+  expect_true(all(u$presence))
+})
+
+test_that("repair_frame_ids leaves leading frames alone when they hold other data", {
+  frames <- make_path_frames()
+  frames[[1]]$x <- frames[[1]]$x + 1
+  expect_equal(repair_frame_ids(frames, grouped = TRUE)[[1]]$.id, 1:5)
+})
+
 test_that("tuple_pairs pairs the j-th occurrence of each aesthetic tuple", {
   frames <- make_tweened()
   expect_equal(tuple_pairs(frames[[2]], frames[[4]]), c(1L, NA, 2L))

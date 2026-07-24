@@ -28,14 +28,17 @@
 #'
 #' @param frames A length-nframes list of per-frame data frames.
 #' @param grouped Whether each element is a row-group (paths/polygons). Grouped
-#'   layers are returned unchanged: their elements need vertex-level care, and
-#'   the tuple is one-to-one with `group` only when every line differs in an
-#'   aesthetic.
+#'   layers only get the leading-frame repair below: pairing them across a state
+#'   boundary needs vertex-level care, and their tuple is one-to-one with `group`
+#'   only when every line differs in an aesthetic.
 #' @return `frames` with `.id` rewritten on the frames that could be repaired.
 #' @noRd
 repair_frame_ids <- function(frames, grouped = FALSE) {
-  if (grouped || !frames_are_tweened(frames)) {
+  if (!frames_are_tweened(frames)) {
     return(frames)
+  }
+  if (grouped) {
+    return(repair_leading_group_ids(frames))
   }
   blocks <- id_blocks(frames)
   if (length(blocks) < 2L) {
@@ -64,6 +67,52 @@ repair_frame_ids <- function(frames, grouped = FALSE) {
     }
   }
   frames
+}
+
+# Leading held frames of a path or polygon layer are labelled per *vertex*.
+# gganimate holds the first state with `keep_state()` before it ever calls
+# `transform_path()`, and tweenr's `.get_last_frame()` mints `.id <- seq_len(nrow)`
+# on data that has none yet -- one id per row, which for a grouped layer is one
+# per vertex rather than one per element. transformr relabels per element from the
+# first tween onward, and the two labellings then collide in the union: a
+# 15-vertex line contributes keys 1..15 as single-vertex elements *and* keys 1..3
+# as whole lines, and `polylineGrob` draws nothing for a one-vertex group, so the
+# SVG holds fewer polylines than the union expects and `anime()` aborts.
+#
+# Those held frames are copies of the frame the first tween starts from, so take
+# that frame's labelling.
+repair_leading_group_ids <- function(frames) {
+  labelled <- which(vapply(frames, is_element_labelled, logical(1)))
+  if (length(labelled) == 0L || labelled[[1L]] == 1L) {
+    return(frames)
+  }
+  ref <- frames[[labelled[[1L]]]]
+  for (f in seq_len(labelled[[1L]] - 1L)) {
+    if (holds_same_rows(frames[[f]], ref)) {
+      frames[[f]]$.id <- ref$.id
+    }
+  }
+  frames
+}
+
+# `group` delimits the elements of a grouped layer's frame, so a per-element
+# `.id` is constant within each group.
+is_element_labelled <- function(df) {
+  nrow(df) > 0L &&
+    all(vapply(
+      split(df$.id, df$group),
+      function(v) length(unique(v)) <= 1L,
+      logical(1)
+    ))
+}
+
+# The same rows in the same order, ignoring the columns tweenr and gganimate
+# rewrite per frame.
+holds_same_rows <- function(df, ref) {
+  cols <- setdiff(names(ref), c(".id", ".phase", ".frame", "group"))
+  nrow(df) == nrow(ref) &&
+    all(cols %in% names(df)) &&
+    isTRUE(all.equal(df[cols], ref[cols], check.attributes = FALSE))
 }
 
 # The repair reads tweenr's own bookkeeping, so bail out unless every frame
