@@ -72,9 +72,12 @@ gganime_element_tracks.GeomPoint <- function(
   lapply(seq_len(ncol(union$presence)), function(k) {
     present <- union$presence[, k]
     is_circle <- info[[k]]$is_circle
+    # The reference row decides which colour channels this element paints with;
+    # `shape` is constant per element, so the channel set is too.
+    channels <- point_paint(union$union_data[k, , drop = FALSE])
 
-    cx <- cy <- r <- fill_op <- rep(NA_real_, nframes)
-    fill <- rep(NA_character_, nframes)
+    cx <- cy <- r <- alpha <- rep(NA_real_, nframes)
+    fill <- stroke <- rep(NA_character_, nframes)
     for (f in seq_len(nframes)) {
       if (!present[f]) {
         next
@@ -88,8 +91,10 @@ gganime_element_tracks.GeomPoint <- function(
         info[[k]]$factor,
         affine$res
       )
-      fill[f] <- point_fill(row)
-      fill_op[f] <- if (is.na(row$alpha)) 1 else row$alpha
+      paint <- point_paint(row)
+      fill[f] <- paint$fill
+      stroke[f] <- paint$stroke
+      alpha[f] <- if (is.na(row$alpha)) 1 else row$alpha
     }
 
     xy <- if (is_circle) c("cx", "cy") else c("x", "y")
@@ -99,11 +104,19 @@ gganime_element_tracks.GeomPoint <- function(
     if (is_circle) {
       tracks$r <- round_track(hold_absent(r, present), precision)
     }
-    tracks$fill <- hold_absent(fill, present)
-    tracks[["fill-opacity"]] <- round_track(
-      hold_absent(fill_op, present),
-      precision
-    )
+    # Animate only the channels the shape paints with. The default pch 19 draws
+    # its disc *and* its outline in `colour`, so leaving `stroke` behind holds a
+    # stale ring around a point whose fill has already tweened on; conversely,
+    # tweening `fill` on an open pch would paint over its `none`.
+    opacity_track <- round_track(hold_absent(alpha, present), precision)
+    if (!is.na(channels$fill)) {
+      tracks$fill <- hold_absent(fill, present)
+      tracks[["fill-opacity"]] <- opacity_track
+    }
+    if (!is.na(channels$stroke)) {
+      tracks$stroke <- hold_absent(stroke, present)
+      tracks[["stroke-opacity"]] <- opacity_track
+    }
     tracks$opacity <- presence_opacity(present)
 
     tracks <- drop_constant_tracks(tracks, keep = "opacity"[!all(present)])
@@ -138,15 +151,29 @@ point_radius_px <- function(size, stroke, factor, res) {
   factor * fontsize * res / 72
 }
 
-# Visible disc colour: the fill aesthetic for pch 21-25, else colour.
-point_fill <- function(row) {
+# The colours a point is painted with, matching how the device draws each pch:
+# 0-14 are stroked in `colour` and unfilled, 15-18 are filled in `colour` with
+# no outline, 19-20 are both, and 21-25 are stroked in `colour` and filled from
+# the `fill` aesthetic. `NA` marks a channel the shape leaves at `none`.
+point_paint <- function(row) {
   shape <- row$shape
-  col <- if (!is.na(shape) && shape >= 21L && shape <= 25L) {
+  filled <- !is.na(shape) && shape >= 15L
+  outlined <- is.na(shape) || shape < 15L || shape > 18L
+  fill <- if (!filled) {
+    NA
+  } else if (shape >= 21L) {
     row$fill
   } else {
     row$colour
   }
-  to_hex(col)
+  list(
+    fill = hex_or_na(fill),
+    stroke = if (outlined) hex_or_na(row$colour) else NA_character_
+  )
+}
+
+hex_or_na <- function(x) {
+  if (is.na(x)) NA_character_ else to_hex(x)
 }
 
 to_hex <- function(x) {

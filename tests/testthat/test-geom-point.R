@@ -15,11 +15,27 @@ test_that("point_radius_px matches the gridSVG font-size mapping", {
   )
 })
 
-test_that("point_fill picks fill for pch 21-25 and colour otherwise", {
-  solid <- data.frame(shape = 19, colour = "#112233", fill = "#445566")
-  filled <- data.frame(shape = 21, colour = "#112233", fill = "#445566")
-  expect_equal(point_fill(solid), "#112233")
-  expect_equal(point_fill(filled), "#445566")
+test_that("point_paint follows how each pch family is drawn", {
+  row <- function(shape) {
+    data.frame(shape = shape, colour = "#112233", fill = "#445566")
+  }
+  # 0-14 stroked only, 15-18 filled only, 19-20 both in colour, 21-25 filled
+  # from the fill aesthetic and stroked in colour
+  expect_equal(
+    point_paint(row(1)),
+    list(fill = NA_character_, stroke = "#112233")
+  )
+  expect_equal(
+    point_paint(row(15)),
+    list(fill = "#112233", stroke = NA_character_)
+  )
+  expect_equal(point_paint(row(19)), list(fill = "#112233", stroke = "#112233"))
+  expect_equal(point_paint(row(21)), list(fill = "#445566", stroke = "#112233"))
+})
+
+test_that("point_paint leaves an unset colour as NA", {
+  row <- data.frame(shape = 21, colour = "#112233", fill = NA)
+  expect_equal(point_paint(row), list(fill = NA_character_, stroke = "#112233"))
 })
 
 test_that("to_hex normalises names and hex to #RRGGBB", {
