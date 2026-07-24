@@ -39,6 +39,26 @@ test_that("union_data carries the first-appearance row per element", {
   expect_equal(u$union_data$x[u$union_data$.id == 3], 6)
 })
 
+test_that("rows with no .id get one union slot each, keyed by position", {
+  frames <- make_frames()
+  # the wrap frame of a transition_states() loop: tweenr identifies the rows it
+  # could match and leaves the rest NA
+  frames[[3]] <- data.frame(
+    PANEL = factor(rep(1, 4)),
+    .id = c(1, NA, NA, NA),
+    x = c(5, 6, 7, 8),
+    y = c(50, 60, 70, 80),
+    stringsAsFactors = FALSE
+  )
+  u <- expect_silent(union_elements(frames))
+  # .id 1 and 2 from the earlier frames, plus one slot per unidentified row
+  expect_equal(ncol(u$presence), 5)
+  expect_equal(rowSums(u$presence), c(2, 2, 4))
+  expect_equal(u$keys$.id, c(1, 2, NA, NA, NA))
+  # each unidentified row keeps its own geometry
+  expect_equal(sort(u$union_data$x[is.na(u$union_data$.id)]), c(6, 7, 8))
+})
+
 test_that("frame_index maps keys to their row within each frame", {
   u <- union_elements(make_frames())
   # frame 3 has .id 1 (row 1) and .id 3 (row 2); .id 2 absent (NA)

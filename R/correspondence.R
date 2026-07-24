@@ -8,7 +8,20 @@
 
 # Encode the (PANEL, .id) key. "\r" cannot occur in a factor label or an .id.
 element_key <- function(df) {
-  paste(df$PANEL, df$.id, sep = "\r")
+  paste(df$PANEL, element_ids(df), sep = "\r")
+}
+
+# `.id` as a key component. tweenr leaves it unset on rows that arrive without
+# an enter transmuter -- the wrap frame of a `transition_states()` loop is full
+# of them -- and those rows carry no identity to match on. Key them by their
+# position in the frame instead, marked with "*" so it cannot collide with a
+# real `.id`: frames that repeat the same state then keep the same elements, and
+# two unidentified rows never collapse onto one union slot.
+element_ids <- function(df) {
+  id <- as.character(df$.id)
+  unnamed <- which(is.na(id))
+  id[unnamed] <- paste0("*", unnamed)
+  id
 }
 
 #' Build the element union for one layer
@@ -19,8 +32,8 @@ element_key <- function(df) {
 #'   than a single row (points/rects).
 #' @return A list with:
 #'   * `keys` -- data frame (PANEL, .id, first_frame), one row per element,
-#'     ordered by first appearance then PANEL then .id. This order is the SVG
-#'     child order.
+#'     ordered by first appearance then PANEL then .id, with `.id` `NA` for an
+#'     element keyed by position. This order is the SVG child order.
 #'   * `union_data` -- the reference rows per element, in `keys` order. Single
 #'     mode: the first-appearance row. Grouped mode: the max-arity present
 #'     frame's row-group, with `group` reassigned to a unique integer per
@@ -53,15 +66,18 @@ union_elements <- function(frames, grouped = FALSE) {
 
   parts <- strsplit(seen, "\r", fixed = TRUE)
   panel <- vapply(parts, `[[`, character(1), 1L)
-  id <- vapply(parts, function(p) as.numeric(p[[2]]), numeric(1))
+  id <- vapply(parts, `[[`, character(1), 2L)
+  # Sort on the number where there is one, so the order runs 1, 2, 10 rather
+  # than "1", "10", "2"; positional keys sort after the identified elements.
+  num <- suppressWarnings(as.numeric(id))
 
-  ord <- order(first_frame, panel, id)
+  ord <- order(first_frame, panel, is.na(num), num, id)
   seen <- seen[ord]
   first_frame <- first_frame[ord]
 
   keys <- data.frame(
     PANEL = panel[ord],
-    .id = id[ord],
+    .id = num[ord],
     first_frame = first_frame,
     check.names = FALSE,
     stringsAsFactors = FALSE
