@@ -6,7 +6,6 @@
 .httr-oauth
 .quarto
 .Renviron
-Rplots.pdf
 *.tar.gz
 *.Rcheck/
 inst/doc

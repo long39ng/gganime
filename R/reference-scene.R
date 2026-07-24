@@ -42,5 +42,10 @@ frame_gtable <- function(frame) {
   } else {
     class(frame) <- "ggplot_built"
   }
+  # ggplot_gtable() resolves grob sizes, which needs an open graphics device; if
+  # none is open it auto-opens the default one, leaving a stray Rplots.pdf at the
+  # working directory. Draw on a throwaway null device instead.
+  grDevices::pdf(NULL)
+  on.exit(grDevices::dev.off())
   ggplot2::ggplot_gtable(frame)
 }
