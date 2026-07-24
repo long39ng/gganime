@@ -12,9 +12,10 @@ build_scene_spec <- function(built, fps) {
 
   layers <- lapply(seq_along(built$data), function(i) {
     frames <- built$data[[i]]
+    geom_class <- class(plot_layers[[i]]$geom)
     list(
-      frames = frames,
-      geom_class = class(plot_layers[[i]]$geom),
+      frames = repair_frame_ids(frames, grouped = geom_is_grouped(geom_class)),
+      geom_class = geom_class,
       static = length(frames) == 1L
     )
   })
