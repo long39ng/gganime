@@ -21,3 +21,27 @@
 
 * `gganimeOutput()` and `renderGganime()` embed gganime widgets in Shiny
   applications and interactive R Markdown documents.
+
+* Points now animate the colours their shape is actually drawn with. A solid
+  pch such as the default 19 paints both its disc and its outline in `colour`,
+  and only the disc was animated, so a point kept a stale ring while its fill
+  tweened on. Open shapes (pch 0-14) no longer gain a fill, borderless ones
+  (15-18) no longer gain an outline, and `alpha` now applies to both channels.
+
+* Frames whose rows carry no tweenr identity no longer collapse onto a single
+  element. `transition_states(wrap = TRUE)` ends on such a frame, and all but
+  one of its points went missing along with a "NAs introduced by coercion"
+  warning.
+
+* Points keep their identity across a state boundary. tweenr records the
+  identity of the frame a transition lands on against the wrong rows, so an
+  element could arrive as a different one: it darted to another position and
+  blended between the two colours over the frame it took to get there.
+  `anime()` now reconstructs the pairing tweenr meant to record, from the
+  order in which each set of aesthetics occurs. Where that cannot be verified
+  against the layer's groups, the boundary is left as before.
+
+* Text in the exported SVG keeps its position when the host page sets
+  `white-space: pre`, which pkgdown does for the output of an example. Firefox
+  otherwise preserved gridSVG's indentation and pushed tick labels, legend
+  keys, and the legend title out of line.

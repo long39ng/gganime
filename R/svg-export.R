@@ -12,7 +12,13 @@
 #' @return A list with `doc` (an xml2 document), `panels` (per-panel affine
 #'   closures + ranges), and `symbols` (the pch symbol table).
 #' @noRd
-export_scene_svg <- function(gtable, panel_ranges, res = 96, width = 7, height = 7) {
+export_scene_svg <- function(
+  gtable,
+  panel_ranges,
+  res = 96,
+  width = 7,
+  height = 7
+) {
   svgpath <- tempfile(fileext = ".svg")
   grDevices::pdf(NULL, width = width, height = height)
   grid::grid.newpage()
@@ -88,7 +94,14 @@ foreign_object_to_text <- function(fo, aligns) {
   xml2::xml_set_attr(new, "y", "0")
   xml2::xml_set_attr(new, "text-anchor", align$anchor)
   xml2::xml_set_attr(new, "dominant-baseline", align$baseline)
-  for (a in c("font-size", "font-family", "font-weight", "font-style", "fill", "fill-opacity")) {
+  for (a in c(
+    "font-size",
+    "font-family",
+    "font-weight",
+    "font-style",
+    "fill",
+    "fill-opacity"
+  )) {
     v <- xml2::xml_attr(fo, a)
     if (!is.na(v)) {
       xml2::xml_set_attr(new, a, v)
@@ -115,7 +128,10 @@ foreign_object_align <- function(fo, aligns) {
   for (id in rev(ids)) {
     a <- aligns[[sub("\\.\\.titleGrob.*$", "", id)]]
     if (!is.null(a)) {
-      return(list(anchor = hjust_anchor(a$hjust), baseline = vjust_baseline(a$vjust)))
+      return(list(
+        anchor = hjust_anchor(a$hjust),
+        baseline = vjust_baseline(a$vjust)
+      ))
     }
   }
   list(anchor = "middle", baseline = "central")
@@ -244,6 +260,16 @@ set_element_id <- function(node, layer_index, id) {
 # Serialise the document, dropping the fixed root width/height (keeping viewBox)
 # for resolution independence. xml2 cannot remove attributes, so patch the tag.
 finalize_svg <- function(doc) {
+  # gridSVG indents the <tspan> inside each <text>, which is only harmless while
+  # whitespace collapses. A host page can hand the widget `white-space: pre` --
+  # pkgdown drops example output inside a <pre> -- and the preserved newline then
+  # pushes every tspan down a line in Firefox, so tick labels, legend keys, and
+  # the legend title all drift. Declare the mode the document was written for.
+  xml2::xml_set_attr(
+    xml2::xml_find_first(doc, "/svg"),
+    "style",
+    "white-space: normal"
+  )
   s <- as.character(doc)
   s <- sub("(<svg\\b[^>]*?)\\s+width=\"[^\"]*\"", "\\1", s)
   s <- sub("(<svg\\b[^>]*?)\\s+height=\"[^\"]*\"", "\\1", s)
