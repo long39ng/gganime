@@ -35,9 +35,10 @@ element_ids <- function(df) {
 #'     ordered by first appearance then PANEL then .id, with `.id` `NA` for an
 #'     element keyed by position. This order is the SVG child order.
 #'   * `union_data` -- the reference rows per element, in `keys` order. Single
-#'     mode: the first-appearance row. Grouped mode: the max-arity present
-#'     frame's row-group, with `group` reassigned to a unique integer per
-#'     element so the reference draws one polyline/polygon per element.
+#'     mode: the first-appearance row. Grouped mode: the first-appearance
+#'     row-group padded to the element's largest vertex count, with `group`
+#'     reassigned to a unique integer per element so the reference draws one
+#'     polyline/polygon per element.
 #'   * `presence` -- logical matrix, nframes x n_elements.
 #'   * `frame_index` -- per frame, element-ordered lookup into that frame's rows.
 #'     Single mode: an integer vector (one row per element). Grouped mode: a
@@ -129,19 +130,30 @@ single_union_data <- function(frames, seen, first_frame, frame_index) {
   ud
 }
 
-# The max-arity present frame's row-group per element, `group` reassigned to a
-# unique integer per element (frame `group` integers are not stable across
-# frames). The max-arity frame guarantees >= 2 vertices so GeomPath draws it.
+# The first-appearance row-group per element, padded to the element's largest
+# vertex count, `group` reassigned to a unique integer per element (frame `group`
+# integers are not stable across frames).
+#
+# Padding repeats the last vertex, the same rule `normalise_vertices()` applies
+# to the tracks, and supplies the >= 2 vertices GeomPath needs to draw the
+# element. The geometry is taken from the element's first frame so that the
+# reference matches the first keyframe: Anime.js holds the authored attribute
+# over the first frame interval, so a reference taken from any other frame shows
+# that frame's shape until the second keyframe.
 grouped_union_data <- function(frames, seen, presence, frame_index) {
   rows <- lapply(seq_along(seen), function(k) {
     present_f <- which(presence[, k])
-    counts <- vapply(
+    arity <- max(vapply(
       present_f,
       function(f) length(frame_index[[f]][[k]]),
       integer(1)
-    )
-    f <- present_f[which.max(counts)]
+    ))
+    f <- present_f[[1L]]
     grp <- frames[[f]][frame_index[[f]][[k]], , drop = FALSE]
+    if (nrow(grp) < arity) {
+      pad <- rep(nrow(grp), arity - nrow(grp))
+      grp <- grp[c(seq_len(nrow(grp)), pad), , drop = FALSE]
+    }
     grp$group <- k
     grp
   })

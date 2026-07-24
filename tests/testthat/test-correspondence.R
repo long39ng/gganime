@@ -96,11 +96,13 @@ test_that("grouped frame_index carries every vertex row of a key", {
   expect_length(u$frame_index[[3]][["1\r2"]], 0L)
 })
 
-test_that("grouped union_data takes each element's max-arity frame", {
+test_that("grouped union_data pads each element's first frame to its max arity", {
   u <- union_elements(make_line_frames(), grouped = TRUE)
   # .id 1 peaks at 3 vertices, .id 2 at 2 -> 5 rows total
   expect_equal(nrow(u$union_data), 5L)
   expect_equal(as.integer(table(u$union_data$.id)), c(3L, 2L))
+  # .id 1 has 2 vertices in frame 1, so the third repeats the last one
+  expect_equal(u$union_data$x[u$union_data$.id == 1], c(0, 1, 1))
   # group reassigned to a unique integer per element in keys order
   expect_equal(unique(u$union_data$group), c(1, 2))
 })
