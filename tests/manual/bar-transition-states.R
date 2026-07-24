@@ -5,7 +5,6 @@
 devtools::load_all(".", quiet = TRUE)
 suppressPackageStartupMessages({
   library(ggplot2)
-  library(gganimate)
 })
 
 df <- data.frame(

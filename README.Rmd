@@ -57,7 +57,6 @@ label between years:
 
 ```{r gapminder, eval=FALSE}
 library(ggplot2)
-library(gganimate)
 library(gapminder)
 library(gganime)
 

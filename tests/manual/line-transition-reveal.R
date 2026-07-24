@@ -5,7 +5,6 @@
 devtools::load_all(".", quiet = TRUE)
 suppressPackageStartupMessages({
   library(ggplot2)
-  library(gganimate)
 })
 
 aq <- airquality[!is.na(airquality$Temp), ]

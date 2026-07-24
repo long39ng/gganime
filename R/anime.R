@@ -19,7 +19,6 @@
 #' @return An `htmlwidget` of class `gganime`.
 #' @examples
 #' library(ggplot2)
-#' library(gganimate)
 #'
 #' p <- ggplot(mtcars, aes(mpg, wt)) +
 #'   geom_point(aes(colour = factor(cyl))) +

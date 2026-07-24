@@ -52,7 +52,6 @@ skip_if_not_installed("gganimate")
 skip_if_not_installed("gridSVG")
 
 library(ggplot2)
-library(gganimate)
 
 time_plot <- function(title = "Year: {frame_time}", ...) {
   df <- data.frame(

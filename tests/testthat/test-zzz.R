@@ -1,7 +1,6 @@
 skip_if_not_installed("gganimate")
 
 library(ggplot2)
-library(gganimate)
 
 gganim_plot <- function() {
   ggplot(mtcars, aes(mpg, wt)) +

@@ -1,3 +1,4 @@
+
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 # gganime
@@ -31,7 +32,7 @@ attributes:
 
 Install the development version from GitHub with:
 
-```r
+``` r
 # install.packages("pak")
 pak::pak("long39ng/gganime")
 ```
@@ -46,9 +47,8 @@ instead of `animate()`. Here `transition_time()` animates over a
 continuous variable, sizing each country’s bubble by population and
 filling in the `{frame_time}` label between years:
 
-```r
+``` r
 library(ggplot2)
-library(gganimate)
 library(gapminder)
 library(gganime)
 
@@ -68,7 +68,7 @@ anime(p)
 
 A `shadow_mark()` leaves earlier frames behind the current one:
 
-```r
+``` r
 p <- ggplot(airquality, aes(Day, Temp)) +
   geom_point() +
   transition_time(Month) +

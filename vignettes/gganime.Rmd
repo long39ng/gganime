@@ -39,7 +39,6 @@ Start from a static plot.
 
 ```{r, eval = render_ok}
 library(ggplot2)
-library(gganimate)
 library(gganime)
 
 p <- ggplot(iris, aes(Petal.Width, Petal.Length)) +

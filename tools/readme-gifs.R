@@ -1,7 +1,6 @@
 # Capture each README example widget to an animated GIF in man/figures/.
 
 library(ggplot2)
-library(gganimate)
 library(gapminder)
 devtools::load_all(".", quiet = TRUE)
 

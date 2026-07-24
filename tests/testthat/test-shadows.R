@@ -182,7 +182,6 @@ skip_if_not_installed("gganimate")
 skip_if_not_installed("gridSVG")
 
 library(ggplot2)
-library(gganimate)
 
 shadow_point_plot <- function(past = TRUE, future = FALSE) {
   df <- data.frame(

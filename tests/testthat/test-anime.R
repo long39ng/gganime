@@ -2,7 +2,6 @@ skip_if_not_installed("gganimate")
 skip_if_not_installed("gridSVG")
 
 library(ggplot2)
-library(gganimate)
 
 # Five points, all present in both states.
 all_present_plot <- function() {

@@ -50,7 +50,6 @@ Anime.js, instead of gganimate's frame-by-frame output.
 }
 \examples{
 library(ggplot2)
-library(gganimate)
 
 p <- ggplot(mtcars, aes(mpg, wt)) +
   geom_point(aes(colour = factor(cyl))) +

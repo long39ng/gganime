@@ -24,7 +24,6 @@
 #' if (interactive() && rlang::is_installed("shiny")) {
 #'   library(shiny)
 #'   library(ggplot2)
-#'   library(gganimate)
 #'
 #'   ui <- fluidPage(gganimeOutput("plot"))
 #'
