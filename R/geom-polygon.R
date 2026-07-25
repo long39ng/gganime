@@ -5,8 +5,9 @@
 # fill-opacity, at a constant vertex arity per element.
 #
 # A ribbon/area ring is built from ymin/ymax: forward along the top edge, back
-# along the bottom. A raw polygon's rows are already the ring. Vertices are
-# (to_svg_x, to_svg_y) in the same y-up space as rects.
+# along the bottom. A raw polygon's rows are already the ring. Rings are built in
+# data coordinates and mapped through affine_xy(), so a flipped coord swaps the
+# axes without changing the vertex order ggplot2 draws the ring in.
 
 # --- GeomRibbon (geom_area / geom_ribbon) ----------------------------------
 
@@ -108,7 +109,7 @@ polygon_tracks <- function(union, frames, affines, precision, ids, ring) {
     for (f in which(present)) {
       row <- frames[[f]][union$frame_index[[f]][[k]], , drop = FALSE]
       xy <- ring(row)
-      verts[[f]] <- cbind(affine$to_svg_x(xy[, 1]), affine$to_svg_y(xy[, 2]))
+      verts[[f]] <- affine_xy(affine, xy[, 1], xy[, 2])
       fill[f] <- to_hex(row$fill[1])
       fill_op[f] <- paint_opacity(row$alpha[1], row$fill[1])
     }

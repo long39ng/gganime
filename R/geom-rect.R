@@ -1,8 +1,8 @@
 # Rect adapter, shared by geom_col and geom_bar (both draw through GeomRect).
 # A bar exports as a plain <rect>, so x/y/width/height animate directly. gridSVG
 # wraps the whole document in a single translate/scale-1,-1 flip, so the rect
-# attributes live in the same y-up space as the data->SVG affine: the rect's y
-# is to_svg_y(ymin) (the smaller edge) and its height is positive.
+# attributes live in the same y-up space as the data->SVG affine: the rect's
+# origin is the (xmin, ymin) corner and its extents are positive.
 
 # --- GeomRect --------------------------------------------------------------
 
@@ -44,12 +44,18 @@ gganime_element_tracks.GeomRect <- function(
         next
       }
       row <- frames[[f]][union$frame_index[[f]][k], , drop = FALSE]
-      x0 <- affine$to_svg_x(row$xmin)
-      y0 <- affine$to_svg_y(row$ymin)
-      x[f] <- x0
-      y[f] <- y0
-      w[f] <- affine$to_svg_x(row$xmax) - x0
-      h[f] <- affine$to_svg_y(row$ymax) - y0
+      # Both SVG axes rise with their data range, so the (xmin, ymin) corner is
+      # the rect's origin whether or not the coord is flipped, and the extents
+      # come out positive either way.
+      corners <- affine_xy(
+        affine,
+        c(row$xmin, row$xmax),
+        c(row$ymin, row$ymax)
+      )
+      x[f] <- corners[1, 1]
+      y[f] <- corners[1, 2]
+      w[f] <- corners[2, 1] - corners[1, 1]
+      h[f] <- corners[2, 2] - corners[1, 2]
       fill[f] <- to_hex(row$fill)
       fill_op[f] <- paint_opacity(row$alpha, row$fill)
     }

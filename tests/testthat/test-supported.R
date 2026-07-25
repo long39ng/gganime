@@ -61,3 +61,32 @@ test_that("a faceted non-Cartesian coord is still rejected", {
     transition_states(cyl)
   expect_error(anime(p), "Coordinate system")
 })
+test_that("the affine coords pass post-build", {
+  coords <- list(
+    coord_cartesian(),
+    coord_cartesian(xlim = c(15, 25)),
+    coord_fixed(ratio = 2),
+    coord_equal(ratio = 2),
+    coord_flip()
+  )
+  for (coord in coords) {
+    p <- ggplot(mtcars, aes(mpg, wt)) +
+      geom_point() +
+      coord +
+      transition_states(cyl)
+    p$nframes <- 4
+    expect_silent(check_supported_postbuild(ggplot2::ggplot_build(p)))
+  }
+})
+
+test_that("coord_transform is rejected despite being Cartesian", {
+  p <- ggplot(mtcars, aes(mpg, wt)) +
+    geom_point() +
+    coord_transform(y = "log10") +
+    transition_states(cyl)
+  p$nframes <- 4
+  expect_error(
+    check_supported_postbuild(ggplot2::ggplot_build(p)),
+    "Coordinate system"
+  )
+})

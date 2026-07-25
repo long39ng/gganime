@@ -16,6 +16,9 @@
   panel animates on the one timeline, and strips and per-panel axes are drawn
   once.
 
+* Coordinate systems: `coord_cartesian()`, `coord_fixed()` / `coord_equal()`,
+  and `coord_flip()`.
+
 * `enter_*()` and `exit_*()` transmuters, `ease_aes()`, `shadow_mark()`, and the
   `colour`, `fill`, `alpha`, and `size` aesthetics.
 
@@ -33,5 +36,6 @@
   and interactive R Markdown documents.
 
 * A plot using anything gganime cannot render stops with one message naming the
-  alternative. This covers non-Cartesian coordinate systems, `shadow_wake()` and
+  alternative. This covers non-linear coordinate systems (`coord_polar()`,
+  `coord_radial()`, `coord_transform()`, `coord_sf()`), `shadow_wake()` and
   `shadow_trail()`, and `view_*()` other than `view_static()`.

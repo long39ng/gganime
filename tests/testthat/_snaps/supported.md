@@ -54,5 +54,6 @@
     Condition
       Error in `anime()`:
       ! This plot uses features gganime cannot render yet:
-      x Coordinate system <CoordPolar> is not supported; only `coord_cartesian()`.
+      x Coordinate system <CoordPolar> is not supported yet.
+      i Supported: `coord_cartesian()`, `coord_fixed()`, `coord_equal()`, and `coord_flip()`.
 

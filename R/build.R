@@ -55,10 +55,20 @@ build_shadow_spec <- function(built) {
 
 # Per-panel data ranges, keyed by PANEL level. The SVG rectangle and the affine
 # that pairs with them are added later, in export_scene_svg().
+#
+# `x.range`/`y.range` are ranges of the *screen* axes, not of the data columns:
+# under `coord_flip()` ggplot2 sets them up from the swapped scales, so
+# `x.range` is the range of the data `y`. The `flipped` flag tells the affine
+# which data column feeds which axis; both ranges are used as they come.
 build_panel_ranges <- function(built) {
   pp <- built$layout$panel_params
+  flipped <- inherits(built$plot$coordinates, "CoordFlip")
   panels <- lapply(seq_along(pp), function(i) {
-    list(x_range = pp[[i]]$x.range, y_range = pp[[i]]$y.range)
+    list(
+      x_range = pp[[i]]$x.range,
+      y_range = pp[[i]]$y.range,
+      flipped = flipped
+    )
   })
   names(panels) <- as.character(seq_along(pp))
   panels

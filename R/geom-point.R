@@ -79,8 +79,9 @@ gganime_element_tracks.GeomPoint <- function(
         next
       }
       row <- frames[[f]][union$frame_index[[f]][k], , drop = FALSE]
-      cx[f] <- affine$to_svg_x(row$x)
-      cy[f] <- affine$to_svg_y(row$y)
+      centre <- affine_xy(affine, row$x, row$y)
+      cx[f] <- centre[, 1]
+      cy[f] <- centre[, 2]
       r[f] <- point_radius_px(
         row$size,
         row$stroke,

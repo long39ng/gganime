@@ -165,6 +165,9 @@ vjust_baseline <- function(vjust) {
 # [0, 1] on ggplot2 4, so the map comes from the exported panel rectangle plus the
 # data ranges: svg = origin + (data - min) / (max - min) * extent, both axes
 # rising. Free scales need no extra code -- each panel has its own range.
+#
+# `to_svg_x`/`to_svg_y` scale a value onto the horizontal/vertical SVG axis;
+# callers go through affine_xy() to pair a data column with an axis.
 panel_affines <- function(exp, doc, panel_ranges, res) {
   groups <- panel_group_nodes(doc)
   absent <- setdiff(names(panel_ranges), names(groups))
@@ -186,11 +189,24 @@ panel_affines <- function(exp, doc, panel_ranges, res) {
       to_svg_y = function(dy) {
         rect$y + (dy - yr[1]) / (yr[2] - yr[1]) * rect$height
       },
+      flipped = isTRUE(panel_ranges[[panel]]$flipped),
       res = res
     )
   })
   names(affines) <- names(panel_ranges)
   affines
+}
+
+# Map data coordinates through a panel's affine to SVG (horizontal, vertical)
+# positions, as a two-column matrix. Under `coord_flip()` the data x runs up the
+# vertical axis and the data y across the horizontal one; ggplot2 implements the
+# flip the same way, by swapping the two aesthetics before rescaling.
+affine_xy <- function(affine, x, y) {
+  if (isTRUE(affine$flipped)) {
+    cbind(affine$to_svg_x(y), affine$to_svg_y(x))
+  } else {
+    cbind(affine$to_svg_x(x), affine$to_svg_y(y))
+  }
 }
 
 # The gTree group of each panel, keyed by PANEL. ggplot2 names a panel's gTree

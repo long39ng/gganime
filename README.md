@@ -95,10 +95,13 @@ In Shiny, use `gganimeOutput()` and `renderGganime()`.
   `transition_reveal()`.
 - Geoms: points, lines and paths, bars and columns, areas and ribbons.
 - Facets: `facet_wrap()` and `facet_grid()`, with fixed or free scales.
+- Coords: `coord_cartesian()`, `coord_fixed()` / `coord_equal()`, and
+  `coord_flip()`.
 - `enter_*()` / `exit_*()`, `ease_aes()`, and per-frame labels in the
   title, subtitle, and caption.
 - `shadow_mark()`.
 
 Anything else stops with a message naming the alternative. Current
-limits include non-Cartesian coordinate systems, `shadow_wake()` /
+limits include non-linear coordinate systems (`coord_polar()`,
+`coord_radial()`, `coord_transform()`, `coord_sf()`), `shadow_wake()` /
 `shadow_trail()`, and `view_*()` other than `view_static()`.

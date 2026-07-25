@@ -2,8 +2,8 @@
 # GeomPath). A line exports as one <polyline> per group, so the `points` string
 # animates alongside stroke and stroke-opacity. Each element is a row-group of
 # vertices; the vertex count is normalised across frames so `points` strings
-# tween at a constant arity. Vertices are (to_svg_x(x), to_svg_y(y)) in the same
-# y-up space as rects (no extra flip).
+# tween at a constant arity. Vertices come from affine_xy() in the same y-up
+# space as rects (no extra flip).
 
 # --- GeomPath --------------------------------------------------------------
 
@@ -43,10 +43,7 @@ gganime_element_tracks.GeomPath <- function(
     stroke_op <- rep(NA_real_, nframes)
     for (f in which(present)) {
       row <- frames[[f]][union$frame_index[[f]][[k]], , drop = FALSE]
-      verts[[f]] <- cbind(
-        affine$to_svg_x(row$x),
-        affine$to_svg_y(row$y)
-      )
+      verts[[f]] <- affine_xy(affine, row$x, row$y)
       stroke[f] <- to_hex(row$colour[1])
       stroke_op[f] <- paint_opacity(row$alpha[1], row$colour[1])
     }

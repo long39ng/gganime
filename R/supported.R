@@ -30,6 +30,14 @@ supported_geoms <- c(
 # first. GeomLine draws through GeomPath; GeomArea through GeomRibbon.
 grouped_geom_classes <- c("GeomPath", "GeomRibbon", "GeomPolygon")
 
+# Coords with an affine data->SVG map, which the panel rectangle plus the panel
+# ranges describe fully. `coord_fixed()`/`coord_equal()` are `CoordCartesian` on
+# ggplot2 4, with the aspect ratio applied by the layout.
+supported_coords <- c(
+  "CoordCartesian",
+  "CoordFlip"
+)
+
 geom_is_grouped <- function(geom_class) {
   any(geom_class %in% grouped_geom_classes)
 }
@@ -110,12 +118,15 @@ check_supported_postbuild <- function(built, call = rlang::caller_env()) {
   problems <- character(0)
 
   coord <- built$plot$coordinates
-  if (!identical(class(coord)[1], "CoordCartesian")) {
-    cls <- class(coord)[1]
+  cls <- class(coord)[1]
+  if (!cls %in% supported_coords) {
     problems <- c(
       problems,
       x = cli::format_inline(
-        "Coordinate system {.cls {cls}} is not supported; only {.fn coord_cartesian}."
+        "Coordinate system {.cls {cls}} is not supported yet."
+      ),
+      i = cli::format_inline(
+        "Supported: {.fn coord_cartesian}, {.fn coord_fixed}, {.fn coord_equal}, and {.fn coord_flip}."
       )
     )
   }
