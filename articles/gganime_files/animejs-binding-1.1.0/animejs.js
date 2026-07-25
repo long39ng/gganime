@@ -16,7 +16,11 @@ HTMLWidgets.widget({
 				// shown at full size, not letterboxed inside a fixed box. An SVG
 				// that carries explicit dimensions is left alone.
 				const root = el.querySelector("svg");
-				if (root && !root.hasAttribute("width") && !root.hasAttribute("height")) {
+				if (
+					root &&
+					!root.hasAttribute("width") &&
+					!root.hasAttribute("height")
+				) {
 					const vb = (root.getAttribute("viewBox") || "")
 						.split(/[\s,]+/)
 						.map(Number);
@@ -157,7 +161,7 @@ function resolveCallbacks(events) {
 
 // ---------------------------------------------------------------------------
 // Discrete text keyframes (anime_text)
-// A "text" prop is not a tween: its values are swapped into the target's
+// A "text" prop is not interpolated: its values are swapped into the target's
 // textContent as the segment advances. Split the tween props from the text
 // props so Anime.js never tries to interpolate the latter.
 // ---------------------------------------------------------------------------
@@ -174,24 +178,41 @@ function splitTextProps(props) {
 	return { tween, texts };
 }
 
-// A timeline timer whose onUpdate maps its own progress onto the value array
-// and writes the current value to each target's textContent. Adding it as a
-// timer (params with no target) also gives the segment its duration on the
-// timeline, so a text-only timeline still has length and scrubs correctly.
-function makeTextTimer(targets, values, duration) {
+// Adds a segment that walks the value array and writes the current value to
+// each target's textContent.
+//
+// The swap rides on a tween of the array index, in the tween's own `modifier`,
+// rather than on a callback: Anime.js renders tweened values on every path,
+// including a seek to exactly 0, where it skips onUpdate and onRender. Driving
+// the text from a callback leaves the previously written value on screen when
+// the timeline is scrubbed back to its start.
+//
+// The tween carries the segment's duration too, so a text-only timeline still
+// has length and scrubs correctly. Its ease is linear whatever the timeline
+// defaults are, so each value holds for an equal share of the duration.
+function addTextSwap(tl, targets, values, duration, position) {
 	const n = values.length;
-	return {
-		duration: duration,
-		onUpdate: (self) => {
-			if (n === 0) return;
-			const p = self.iterationProgress ?? self.progress ?? 0;
-			const i = Math.min(Math.max(Math.floor(p * n), 0), n - 1);
-			const text = String(values[i]);
-			targets.forEach((target) => {
-				if (target.textContent !== text) target.textContent = text;
-			});
+	if (n === 0) {
+		return;
+	}
+	const index = { at: 0 };
+	tl.add(
+		index,
+		{
+			at: [0, n],
+			duration: duration,
+			ease: "linear",
+			modifier: (value) => {
+				const i = Math.min(Math.max(Math.floor(value), 0), n - 1);
+				const text = String(values[i]);
+				targets.forEach((target) => {
+					if (target.textContent !== text) target.textContent = text;
+				});
+				return value;
+			},
 		},
-	};
+		position,
+	);
 }
 
 // ---------------------------------------------------------------------------
@@ -231,7 +252,7 @@ function buildTimeline(el, config) {
 		if (texts.length > 0) {
 			const duration = segment.duration ?? defaultDuration;
 			for (const values of texts) {
-				tl.add(makeTextTimer(targets, values, duration), position);
+				addTextSwap(tl, targets, values, duration, position);
 			}
 		}
 	}
