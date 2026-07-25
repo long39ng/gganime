@@ -1,6 +1,6 @@
 Package: gganime
 Title: Animate 'ggplot2' Plots with 'Anime.js'
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R: 
     person("Long", "Nguyen", , "nguyen@dezim-institut.de", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-8878-7386"))
