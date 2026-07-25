@@ -1,5 +1,10 @@
 # gganime (development version)
 
+* `anime()` supports `facet_wrap()` and `facet_grid()`. Every panel animates on
+  the one timeline, with fixed or free scales, and strips and per-panel axes are
+  drawn once. Each panel maps its own data range onto its own rectangle, so an
+  element is animated within the panel it belongs to.
+
 * A bare gganimate plot now prints as an animated-SVG widget through `anime()`
   at the console and in knitr. Set `options(gganime.autoprint = FALSE)` to keep
   gganimate's own output.

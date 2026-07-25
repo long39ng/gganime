@@ -51,7 +51,7 @@ export_scene_svg <- function(
 
   list(
     doc = doc,
-    panels = panel_affines(exp, panel_ranges, res),
+    panels = panel_affines(exp, doc, panel_ranges, res),
     symbols = symbol_table(doc)
   )
 }
@@ -161,30 +161,25 @@ vjust_baseline <- function(vjust) {
   }
 }
 
-# Data->SVG affine per panel. The panel viewport's own scales are [0, 1] on
-# ggplot2 4, so the map is built from the exported panel rectangle plus the data
-# ranges: svg = origin + (data - min) / (max - min) * extent, both axes rising.
-panel_affines <- function(exp, panel_ranges, res) {
-  coords <- exp$coords
-  # gridSVG's viewport counter changes the GRID.VP.<n>.<m> infixes each export,
-  # so match the panel viewport structurally rather than by a fixed number.
-  keys <- grep(
-    "panel.*::GRID\\.VP\\.[0-9]+\\.[0-9]+$",
-    names(coords),
-    value = TRUE
-  )
-  if (length(keys) != 1L) {
+# Data->SVG affine per panel, keyed by PANEL. The panel viewport's own scales are
+# [0, 1] on ggplot2 4, so the map comes from the exported panel rectangle plus the
+# data ranges: svg = origin + (data - min) / (max - min) * extent, both axes
+# rising. Free scales need no extra code -- each panel has its own range.
+panel_affines <- function(exp, doc, panel_ranges, res) {
+  groups <- panel_group_nodes(doc)
+  absent <- setdiff(names(panel_ranges), names(groups))
+  if (length(absent) > 0) {
     cli::cli_abort(c(
-      "Expected exactly one panel in the exported SVG.",
-      x = "Found {length(keys)}; faceted plots are not supported yet."
+      "The exported SVG is missing a panel.",
+      x = "No panel group for PANEL {.val {absent}}."
     ))
   }
-  rect <- coords[[keys]]
-  xr <- panel_ranges[["1"]]$x_range
-  yr <- panel_ranges[["1"]]$y_range
 
-  list(
-    "1" = list(
+  affines <- lapply(names(panel_ranges), function(panel) {
+    rect <- panel_viewport_rect(exp, groups[[panel]], panel)
+    xr <- panel_ranges[[panel]]$x_range
+    yr <- panel_ranges[[panel]]$y_range
+    list(
       to_svg_x = function(dx) {
         rect$x + (dx - xr[1]) / (xr[2] - xr[1]) * rect$width
       },
@@ -193,7 +188,47 @@ panel_affines <- function(exp, panel_ranges, res) {
       },
       res = res
     )
+  })
+  names(affines) <- names(panel_ranges)
+  affines
+}
+
+# The gTree group of each panel, keyed by PANEL. ggplot2 names a panel's gTree
+# "panel-<PANEL>", exported as `<g id="panel-<PANEL>.gTree.<n>.<m>">`. That name
+# is the only reliable attribution: panels are drawn column-major
+# (facet_grid(a ~ b) draws panel-1, panel-4, panel-2, ...) while PANEL numbers
+# row-major, so document position does not identify a panel. The literal ".gTree"
+# excludes the enclosing gtable viewport group and stops PANEL 1 from matching
+# "panel-10.gTree".
+panel_group_nodes <- function(doc) {
+  nodes <- xml2::xml_find_all(doc, ".//g[starts-with(@id, 'panel-')]")
+  ids <- xml2::xml_attr(nodes, "id")
+  keep <- grepl("^panel-[0-9]+\\.gTree", ids)
+  nodes <- as.list(nodes[keep])
+  names(nodes) <- sub("^panel-([0-9]+)\\.gTree.*$", "\\1", ids[keep])
+  nodes
+}
+
+# The exported rectangle of a panel. gridSVG names each viewport group after the
+# viewport path and lists the same string in `exp$coords`, so the nearest
+# enclosing panel viewport ancestor is the lookup key. The GRID.VP.<n>.<m>
+# counter is session-global, so match it structurally.
+panel_viewport_rect <- function(exp, group, panel) {
+  ancestors <- xml2::xml_attr(
+    xml2::xml_find_all(group, "ancestor::g[@id]"),
+    "id"
   )
+  keys <- ancestors[
+    grepl("panel.*::GRID\\.VP\\.[0-9]+\\.[0-9]+$", ancestors) &
+      ancestors %in% names(exp$coords)
+  ]
+  if (length(keys) == 0L) {
+    cli::cli_abort(c(
+      "Cannot locate the exported rectangle of a panel.",
+      x = "PANEL {.val {panel}} has no panel viewport ancestor in the export."
+    ))
+  }
+  exp$coords[[keys[[length(keys)]]]]
 }
 
 # Radius scaling per pch symbol: single-<circle> symbols carry a factor
@@ -237,17 +272,47 @@ inline_circle <- function(node, r, layer_index, id) {
   xml2::xml_remove(node)
 }
 
-# Data elements of a panel: the `<tag>` nodes inside the panel viewport group
-# that are not grid lines. Axis ticks and legend keys live outside the panel
-# group, so this returns exactly the drawn data, in document (= union) order.
-# GeomPath and GeomPolygon share this because their grobs carry no geom-name id
-# prefix (unlike points/rects) -- only panel membership distinguishes them.
-panel_data_nodes <- function(doc, tag) {
+# XPath predicate matching nodes inside one panel's group (see
+# panel_group_nodes()).
+in_panel_group <- function(panel) {
+  sprintf("ancestor::g[starts-with(@id, 'panel-%s.gTree')]", panel)
+}
+
+# Data elements of one panel: the `<tag>` nodes inside its panel group that are
+# not grid lines. Axis ticks and legend keys are drawn outside the panel group,
+# so this returns exactly the drawn data, in document order. GeomPath and
+# GeomPolygon share this because their grobs have no geom-name id prefix (unlike
+# points/rects) -- only panel membership distinguishes them.
+panel_data_nodes <- function(doc, tag, panel) {
   xpath <- sprintf(
-    ".//%s[not(starts-with(@id, 'panel.grid')) and ancestor::g[contains(@id, 'panel.') and contains(@id, 'GRID.VP')]]",
-    tag
+    ".//%s[not(starts-with(@id, 'panel.grid')) and %s]",
+    tag,
+    in_panel_group(panel)
   )
   xml2::xml_find_all(doc, xpath)
+}
+
+# A layer's data nodes in union order, gathered panel by panel. `panels` is the
+# PANEL of each element in union order and `select(doc, panel)` returns one
+# panel's nodes in document order; within a panel the two orders agree, because
+# ggplot2 draws a panel's rows in the order the union wrote them. Across panels
+# they do not, hence the per-panel gather rather than one document-wide search.
+ordered_data_nodes <- function(doc, select, panels, element, tag, hint = NULL) {
+  positions <- split(seq_along(panels), factor(panels, levels = unique(panels)))
+  nodes <- vector("list", length(panels))
+  for (panel in names(positions)) {
+    found <- select(doc, panel)
+    at <- positions[[panel]]
+    if (length(found) != length(at)) {
+      cli::cli_abort(c(
+        "{element} element count does not match the union.",
+        x = "Panel {panel}: found {length(found)} SVG {tag}{cli::qty(length(found))}{?s} but expected {length(at)}.",
+        i = hint
+      ))
+    }
+    nodes[at] <- as.list(found)
+  }
+  nodes
 }
 
 # Tag a node with the animation id without changing its element type.

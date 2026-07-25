@@ -32,6 +32,39 @@ make_raw_lines <- function() {
   )
 }
 
+# The same line in two panels: ggplot2 numbers `group` across the whole layer,
+# so both panels' lines share group 1.
+make_faceted_raw_lines <- function() {
+  data.frame(
+    .frame = 1,
+    PANEL = factor(rep(c(1, 2), each = 3)),
+    .id = -1,
+    group = 1,
+    x = rep(c(1, 2, 3), 2),
+    y = c(1, 2, 1, 3, 4, 3),
+    colour = "grey",
+    alpha = NA_real_,
+    stringsAsFactors = FALSE
+  )
+}
+
+test_that("a grouped shadow keeps the panels of a shared group apart", {
+  u <- shadow_layer_union(
+    make_faceted_raw_lines(),
+    past = TRUE,
+    future = FALSE,
+    nframes = 2,
+    grouped = TRUE
+  )
+
+  # One element per panel, not one merged element spanning both.
+  expect_equal(ncol(u$union$presence), 2L)
+  expect_equal(u$union$panels, c("1", "2"))
+  expect_equal(u$union$frame_index[[1]][[1]], 1:3)
+  expect_equal(u$union$frame_index[[1]][[2]], 4:6)
+  expect_equal(u$union$union_data$group, rep(c(1L, 2L), each = 3))
+})
+
 test_that("shadow_presence encodes the past rule", {
   m <- shadow_presence(c(1, 2, 3), nframes = 3, past = TRUE, future = FALSE)
   expect_equal(m[, 1], c(FALSE, TRUE, TRUE))
@@ -112,16 +145,11 @@ test_that("a visible shadow element yields constant geometry and an opacity trac
     nframes = 3,
     grouped = FALSE
   )
-  affine <- list(
-    to_svg_x = function(x) x,
-    to_svg_y = function(y) y,
-    res = 96
-  )
   tracks <- gganime_element_tracks(
     geom_adapter("GeomPoint"),
     union = u$union,
     frames = u$frames,
-    affine = affine,
+    affines = identity_affines(ncol(u$union$presence)),
     precision = 2,
     ids = element_id(1, seq_len(ncol(u$union$presence))),
     symbols = list(gridSVG.pch19 = list(circle = TRUE, factor = 0.375))

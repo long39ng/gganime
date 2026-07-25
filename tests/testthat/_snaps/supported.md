@@ -47,16 +47,6 @@
       x Transition <TransitionNull> is not supported yet.
       i Supported: "TransitionStates", "TransitionTime", and "TransitionReveal".
 
-# a faceted plot is rejected post-build
-
-    Code
-      anime(p)
-    Condition
-      Error in `anime()`:
-      ! This plot uses features gganime cannot render yet:
-      x Faceted plots are not supported yet; only a single panel renders.
-      i Drop `facet_wrap()`/`facet_grid()`, or animate each facet separately.
-
 # a non-Cartesian coord is rejected post-build
 
     Code

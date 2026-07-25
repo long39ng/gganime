@@ -17,7 +17,7 @@
 #' @param spec A `gganime_scene_spec`.
 #' @return A list over layers. Each entry is `NULL` (no shadow for that layer) or
 #'   a list with `union` (the correspondence-shaped list: `union_data`,
-#'   `presence`, `frame_index`) and `frames` (a length-nframes list feeding the
+#'   `presence`, `frame_index`, `panels`) and `frames` (a length-nframes list feeding the
 #'   adapter's per-frame lookup; the same styled raw rows on every frame, since
 #'   shadow geometry does not move).
 #' @noRd
@@ -45,9 +45,11 @@ build_shadow_unions <- function(spec) {
 # state's rows under `past`) are dropped, matching gganimate. Returns `NULL` if
 # the layer contributes no visible shadow.
 shadow_layer_union <- function(raw, past, future, nframes, grouped) {
-  # Row indices per element, into `raw`, in element order.
+  # Row indices per element, into `raw`, in element order. PANEL joins the
+  # grouped key because ggplot2 numbers `group` across the whole layer, so two
+  # panels can share a group integer.
   members <- if (grouped) {
-    key <- paste(raw$.frame, raw$group, sep = "\r")
+    key <- paste(raw$.frame, raw$PANEL, raw$group, sep = "\r")
     unname(split(seq_len(nrow(raw)), factor(key, levels = unique(key))))
   } else {
     as.list(seq_len(nrow(raw)))
@@ -83,7 +85,8 @@ shadow_layer_union <- function(raw, past, future, nframes, grouped) {
   union <- list(
     union_data = union_data,
     presence = presence,
-    frame_index = frame_index
+    frame_index = frame_index,
+    panels = as.character(raw$PANEL[vapply(members, `[[`, integer(1), 1L)])
   )
   list(union = union, frames = frames)
 }

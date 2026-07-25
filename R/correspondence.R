@@ -43,6 +43,8 @@ element_ids <- function(df) {
 #'   * `frame_index` -- per frame, element-ordered lookup into that frame's rows.
 #'     Single mode: an integer vector (one row per element). Grouped mode: a
 #'     list of integer vectors (the vertex rows of each element).
+#'   * `panels` -- the PANEL of each element, in `keys` order. Adapters use it to
+#'     pick the element's panel affine and to select its SVG node.
 #' @noRd
 union_elements <- function(frames, grouped = FALSE) {
   nframes <- length(frames)
@@ -115,6 +117,7 @@ union_elements <- function(frames, grouped = FALSE) {
     union_data = union_data,
     presence = presence,
     frame_index = frame_index,
+    panels = keys$PANEL,
     order = seen
   )
 }

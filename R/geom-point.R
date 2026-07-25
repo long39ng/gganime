@@ -29,15 +29,10 @@ gganime_annotate.GeomPoint <- function(
   ids,
   union_data,
   symbols,
+  panels,
   ...
 ) {
-  nodes <- point_nodes(doc)
-  if (length(nodes) != length(ids)) {
-    cli::cli_abort(c(
-      "Point element count does not match the union.",
-      x = "Found {length(nodes)} SVG point{?s} but expected {length(ids)}."
-    ))
-  }
+  nodes <- point_nodes(doc, panels)
   info <- point_symbol_info(union_data, symbols)
   for (k in seq_along(nodes)) {
     if (info[[k]]$is_circle) {
@@ -55,7 +50,7 @@ gganime_element_tracks.GeomPoint <- function(
   geom,
   union,
   frames,
-  affine,
+  affines,
   precision,
   ids,
   symbols,
@@ -71,6 +66,7 @@ gganime_element_tracks.GeomPoint <- function(
   nframes <- nrow(union$presence)
   lapply(seq_len(ncol(union$presence)), function(k) {
     present <- union$presence[, k]
+    affine <- affines[[k]]
     is_circle <- info[[k]]$is_circle
     # The reference row decides which colour channels this element paints with;
     # `shape` is constant per element, so the channel set is too.
@@ -126,9 +122,19 @@ gganime_element_tracks.GeomPoint <- function(
 
 # --- point helpers ---------------------------------------------------------
 
-# Ordered <use> point nodes for the (single) point layer, in document order.
-point_nodes <- function(doc) {
-  xml2::xml_find_all(doc, ".//use[starts-with(@id,'geom_point')]")
+# The layer's <use> point nodes in union order, gathered per panel.
+point_nodes <- function(doc, panels) {
+  ordered_data_nodes(doc, select_point_nodes, panels, "Point", "point")
+}
+
+select_point_nodes <- function(doc, panel) {
+  xml2::xml_find_all(
+    doc,
+    sprintf(
+      ".//use[starts-with(@id,'geom_point') and %s]",
+      in_panel_group(panel)
+    )
+  )
 }
 
 # Per-element pch symbol resolution: circular pch inline to <circle>.

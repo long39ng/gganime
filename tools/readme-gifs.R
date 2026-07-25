@@ -88,6 +88,7 @@ p1 <- ggplot(gapminder, aes(gdpPercap, lifeExp, size = pop, colour = country)) +
   scale_colour_manual(values = country_colors) +
   scale_size(range = c(2, 12)) +
   scale_x_log10() +
+  facet_wrap(~continent) +
   labs(
     title = "Year: {frame_time}",
     x = "GDP per capita",
@@ -96,7 +97,12 @@ p1 <- ggplot(gapminder, aes(gdpPercap, lifeExp, size = pop, colour = country)) +
   transition_time(year) +
   ease_aes("linear")
 
-capture_gif(p1, file.path(fig_dir, "README-gapminder.gif"))
+capture_gif(
+  p1,
+  file.path(fig_dir, "README-gapminder.gif"),
+  width = 800,
+  height = 500
+)
 
 p2 <- ggplot(airquality, aes(Day, Temp)) +
   geom_point() +

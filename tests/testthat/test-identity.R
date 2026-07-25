@@ -125,6 +125,68 @@ test_that("repair_frame_ids leaves leading frames alone when they hold other dat
   expect_equal(repair_frame_ids(frames, grouped = TRUE)[[1]]$.id, 1:5)
 })
 
+# Two panels of one red point each. Panel 1 gains a second red point in state B;
+# panel 2 does not. ggplot2 numbers `group` across the whole layer, so both
+# panels' reds share group 1 and the aesthetic tuple cannot tell them apart --
+# pairing the frames whole would match panel 1's new row against panel 2's row.
+make_two_panel_frames <- function() {
+  frame <- function(panel, x, id, phase) {
+    data.frame(
+      PANEL = factor(panel, levels = c(1, 2)),
+      x = x,
+      colour = "red",
+      group = 1L,
+      .id = id,
+      .phase = phase
+    )
+  }
+  state_b <- function(phase) {
+    frame(c(1, 1, 2), c(2, 3, 20), c(1, 2, NA), phase)
+  }
+  list(
+    frame(c(1, 2), c(1, 10), c(1, 1), "raw"),
+    state_b("raw"),
+    state_b("static")
+  )
+}
+
+test_that("the id repair pairs rows within a panel", {
+  out <- repair_frame_ids(make_two_panel_frames())
+
+  # Panel 1's two rows keep separate ids and panel 2's row stays paired with the
+  # row it continues. Pairing across the whole frame would give both panel 1
+  # rows the same id and hand panel 2 a fresh one.
+  expect_equal(out[[2]]$.id, c(1, 3, 1))
+  expect_equal(out[[3]]$.id, c(1, 3, 1))
+  expect_equal(out[[1]]$.id, c(1, 1))
+
+  # Three elements, and panel 2's element is present in both states.
+  u <- union_elements(out)
+  expect_equal(ncol(u$presence), 3L)
+  expect_equal(u$panels, c("1", "2", "1"))
+  expect_true(all(u$presence[, u$panels == "2"]))
+})
+
+test_that("the id repair of one panel matches repairing it alone", {
+  two <- make_two_panel_frames()
+  one <- lapply(two, function(d) {
+    d <- d[d$PANEL == "2", , drop = FALSE]
+    rownames(d) <- NULL
+    d
+  })
+
+  repaired <- repair_frame_ids(two)
+  expect_equal(
+    lapply(repaired, function(d) d$.id[d$PANEL == "2"]),
+    lapply(repair_frame_ids(one), `[[`, ".id")
+  )
+  # Only `.id` is rewritten; row order and every other column are untouched.
+  expect_equal(
+    lapply(repaired, function(d) d[setdiff(names(d), ".id")]),
+    lapply(two, function(d) d[setdiff(names(d), ".id")])
+  )
+})
+
 test_that("tuple_pairs pairs the j-th occurrence of each aesthetic tuple", {
   frames <- make_tweened()
   expect_equal(tuple_pairs(frames[[2]], frames[[4]]), c(1L, NA, 2L))

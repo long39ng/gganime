@@ -57,6 +57,7 @@ p <- ggplot(gapminder, aes(gdpPercap, lifeExp, size = pop, colour = country)) +
   scale_colour_manual(values = country_colors) +
   scale_size(range = c(2, 12)) +
   scale_x_log10() +
+  facet_wrap(~continent) +
   labs(title = "Year: {frame_time}", x = "GDP per capita", y = "life expectancy") +
   transition_time(year) +
   ease_aes("linear")
@@ -64,7 +65,7 @@ p <- ggplot(gapminder, aes(gdpPercap, lifeExp, size = pop, colour = country)) +
 anime(p)
 ```
 
-<img src="man/figures/README-gapminder.gif" alt="Bubble chart of life expectancy against GDP per capita, one bubble per country sized by population, animating across years." width="100%" />
+<img src="man/figures/README-gapminder.gif" alt="Bubble chart of life expectancy against GDP per capita, one bubble per country sized by population, faceted by continent, animating across years." width="100%" />
 
 A `shadow_mark()` leaves earlier frames behind the current one:
 
@@ -93,11 +94,11 @@ In Shiny, use `gganimeOutput()` and `renderGganime()`.
 - Transitions: `transition_states()`, `transition_time()`,
   `transition_reveal()`.
 - Geoms: points, lines and paths, bars and columns, areas and ribbons.
+- Facets: `facet_wrap()` and `facet_grid()`, with fixed or free scales.
 - `enter_*()` / `exit_*()`, `ease_aes()`, and per-frame labels in the
   title, subtitle, and caption.
 - `shadow_mark()`.
 
 Anything else stops with a message naming the alternative. Current
-limits include faceted plots (only a single panel renders),
-non-Cartesian coordinate systems, `shadow_wake()` / `shadow_trail()`,
-and `view_*()` other than `view_static()`.
+limits include non-Cartesian coordinate systems, `shadow_wake()` /
+`shadow_trail()`, and `view_*()` other than `view_static()`.

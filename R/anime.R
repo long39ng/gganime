@@ -103,7 +103,6 @@ anime <- function(
     width = width / res,
     height = height / res
   )
-  affine <- export$panels[["1"]]
 
   elements <- list()
   for (i in seq_along(spec$layers)) {
@@ -114,16 +113,21 @@ anime <- function(
     n_shadow <- if (is.null(shadow)) 0L else ncol(shadow$union$presence)
     n_live <- ncol(live_union$presence)
     ids <- element_id(i, seq_len(n_shadow + n_live))
+    # The PANEL of each element, in the order the reference gtable drew them:
+    # shadow marks first, then the live elements. Each element's affine follows.
+    panels <- c(shadow$union$panels, live_union$panels)
+    affines <- export$panels[panels]
 
-    # One annotate pass over every node in document order (shadows first),
-    # keyed by the combined union data.
+    # One annotate pass over the layer's nodes, gathered per panel and keyed by
+    # the combined union data.
     gganime_annotate(
       adapter,
       doc = export$doc,
       layer_index = i,
       ids = ids,
       union_data = layer_union_data[[i]],
-      symbols = export$symbols
+      symbols = export$symbols,
+      panels = panels
     )
 
     if (n_shadow > 0L) {
@@ -131,7 +135,7 @@ anime <- function(
         adapter,
         union = shadow$union,
         frames = shadow$frames,
-        affine = affine,
+        affines = affines[seq_len(n_shadow)],
         precision = precision,
         ids = ids[seq_len(n_shadow)],
         symbols = export$symbols
@@ -143,7 +147,7 @@ anime <- function(
       adapter,
       union = live_union,
       frames = spec$layers[[i]]$frames,
-      affine = affine,
+      affines = affines[n_shadow + seq_len(n_live)],
       precision = precision,
       ids = ids[n_shadow + seq_len(n_live)],
       symbols = export$symbols

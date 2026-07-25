@@ -13,16 +13,10 @@ gganime_annotate.GeomPath <- function(
   doc,
   layer_index,
   ids,
+  panels,
   ...
 ) {
-  nodes <- path_nodes(doc)
-  if (length(nodes) != length(ids)) {
-    cli::cli_abort(c(
-      "Line element count does not match the union.",
-      x = "Found {length(nodes)} SVG polyline{?s} but expected {length(ids)}.",
-      i = "A line needs at least two points in every frame to be drawn."
-    ))
-  }
+  nodes <- path_nodes(doc, panels)
   for (k in seq_along(nodes)) {
     set_element_id(nodes[[k]], layer_index, ids[k])
   }
@@ -34,7 +28,7 @@ gganime_element_tracks.GeomPath <- function(
   geom,
   union,
   frames,
-  affine,
+  affines,
   precision,
   ids,
   ...
@@ -42,6 +36,7 @@ gganime_element_tracks.GeomPath <- function(
   nframes <- nrow(union$presence)
   lapply(seq_len(ncol(union$presence)), function(k) {
     present <- union$presence[, k]
+    affine <- affines[[k]]
 
     verts <- vector("list", nframes)
     stroke <- rep(NA_character_, nframes)
@@ -78,7 +73,14 @@ gganime_element_tracks.GeomPath <- function(
 
 # --- path helpers ----------------------------------------------------------
 
-# Ordered <polyline> data nodes, in document (= union) order.
-path_nodes <- function(doc) {
-  panel_data_nodes(doc, "polyline")
+# The layer's <polyline> data nodes in union order, gathered per panel.
+path_nodes <- function(doc, panels) {
+  ordered_data_nodes(
+    doc,
+    function(doc, panel) panel_data_nodes(doc, "polyline", panel),
+    panels,
+    "Line",
+    "polyline",
+    hint = "A line needs at least two points in every frame to be drawn."
+  )
 }

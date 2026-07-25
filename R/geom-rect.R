@@ -12,15 +12,10 @@ gganime_annotate.GeomRect <- function(
   doc,
   layer_index,
   ids,
+  panels,
   ...
 ) {
-  nodes <- rect_nodes(doc)
-  if (length(nodes) != length(ids)) {
-    cli::cli_abort(c(
-      "Rect element count does not match the union.",
-      x = "Found {length(nodes)} SVG rect{?s} but expected {length(ids)}."
-    ))
-  }
+  nodes <- rect_nodes(doc, panels)
   for (k in seq_along(nodes)) {
     set_element_id(nodes[[k]], layer_index, ids[k])
   }
@@ -32,7 +27,7 @@ gganime_element_tracks.GeomRect <- function(
   geom,
   union,
   frames,
-  affine,
+  affines,
   precision,
   ids,
   ...
@@ -40,6 +35,7 @@ gganime_element_tracks.GeomRect <- function(
   nframes <- nrow(union$presence)
   lapply(seq_len(ncol(union$presence)), function(k) {
     present <- union$presence[, k]
+    affine <- affines[[k]]
 
     x <- y <- w <- h <- fill_op <- rep(NA_real_, nframes)
     fill <- rep(NA_character_, nframes)
@@ -77,9 +73,19 @@ gganime_element_tracks.GeomRect <- function(
 
 # --- rect helpers ----------------------------------------------------------
 
-# Ordered <rect> data nodes, in document order. GeomCol/GeomBar/GeomRect all
-# draw a grob named "geom_rect", so one id prefix covers the three; theme and
-# legend rects carry other ids.
-rect_nodes <- function(doc) {
-  xml2::xml_find_all(doc, ".//rect[starts-with(@id,'geom_rect')]")
+# The layer's <rect> data nodes in union order, gathered per panel.
+# GeomCol/GeomBar/GeomRect all draw a grob named "geom_rect", so one id prefix
+# covers the three; theme and legend rects have other ids.
+rect_nodes <- function(doc, panels) {
+  ordered_data_nodes(doc, select_rect_nodes, panels, "Rect", "rect")
+}
+
+select_rect_nodes <- function(doc, panel) {
+  xml2::xml_find_all(
+    doc,
+    sprintf(
+      ".//rect[starts-with(@id,'geom_rect') and %s]",
+      in_panel_group(panel)
+    )
+  )
 }

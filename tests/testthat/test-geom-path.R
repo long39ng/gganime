@@ -13,20 +13,16 @@ line_row <- function(id, x, y, colour = "#111111", alpha = NA_real_) {
   )
 }
 
-identity_affine <- function() {
-  list(to_svg_x = function(x) x, to_svg_y = function(y) y, res = 96)
-}
-
 path_tracks_for <- function(frames) {
   union <- union_elements(frames, grouped = TRUE)
-  ids <- element_id(1, seq_len(ncol(union$presence)))
+  n <- ncol(union$presence)
   gganime_element_tracks(
     geom_adapter("GeomPath"),
     union = union,
     frames = frames,
-    affine = identity_affine(),
+    affines = identity_affines(n),
     precision = 2,
-    ids = ids
+    ids = element_id(1, seq_len(n))
   )
 }
 
@@ -104,7 +100,7 @@ test_that("path_nodes selects only panel data polylines, in document order", {
      </svg>'
   )
   xml2::xml_ns_strip(doc)
-  nodes <- path_nodes(doc)
+  nodes <- path_nodes(doc, panels = c("1", "1"))
   expect_equal(
     vapply(nodes, function(n) xml2::xml_attr(n, "id"), character(1)),
     c("GRID.polyline.1.1.1", "GRID.polyline.1.1.2")

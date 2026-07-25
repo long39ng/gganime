@@ -11,8 +11,15 @@
 # --- GeomRibbon (geom_area / geom_ribbon) ----------------------------------
 
 #' @exportS3Method
-gganime_annotate.GeomRibbon <- function(geom, doc, layer_index, ids, ...) {
-  annotate_polygons(doc, layer_index, ids)
+gganime_annotate.GeomRibbon <- function(
+  geom,
+  doc,
+  layer_index,
+  ids,
+  panels,
+  ...
+) {
+  annotate_polygons(doc, layer_index, ids, panels)
 }
 
 #' @exportS3Method
@@ -20,19 +27,26 @@ gganime_element_tracks.GeomRibbon <- function(
   geom,
   union,
   frames,
-  affine,
+  affines,
   precision,
   ids,
   ...
 ) {
-  polygon_tracks(union, frames, affine, precision, ids, ribbon_ring)
+  polygon_tracks(union, frames, affines, precision, ids, ribbon_ring)
 }
 
 # --- GeomPolygon (geom_polygon) --------------------------------------------
 
 #' @exportS3Method
-gganime_annotate.GeomPolygon <- function(geom, doc, layer_index, ids, ...) {
-  annotate_polygons(doc, layer_index, ids)
+gganime_annotate.GeomPolygon <- function(
+  geom,
+  doc,
+  layer_index,
+  ids,
+  panels,
+  ...
+) {
+  annotate_polygons(doc, layer_index, ids, panels)
 }
 
 #' @exportS3Method
@@ -40,29 +54,29 @@ gganime_element_tracks.GeomPolygon <- function(
   geom,
   union,
   frames,
-  affine,
+  affines,
   precision,
   ids,
   ...
 ) {
-  polygon_tracks(union, frames, affine, precision, ids, polygon_ring)
+  polygon_tracks(union, frames, affines, precision, ids, polygon_ring)
 }
 
 # --- polygon helpers -------------------------------------------------------
 
-# Ordered <polygon> data nodes, in document (= union) order.
-polygon_nodes <- function(doc) {
-  panel_data_nodes(doc, "polygon")
+# The layer's <polygon> data nodes in union order, gathered per panel.
+polygon_nodes <- function(doc, panels) {
+  ordered_data_nodes(
+    doc,
+    function(doc, panel) panel_data_nodes(doc, "polygon", panel),
+    panels,
+    "Polygon",
+    "polygon"
+  )
 }
 
-annotate_polygons <- function(doc, layer_index, ids) {
-  nodes <- polygon_nodes(doc)
-  if (length(nodes) != length(ids)) {
-    cli::cli_abort(c(
-      "Polygon element count does not match the union.",
-      x = "Found {length(nodes)} SVG polygon{?s} but expected {length(ids)}."
-    ))
-  }
+annotate_polygons <- function(doc, layer_index, ids, panels) {
+  nodes <- polygon_nodes(doc, panels)
   for (k in seq_along(nodes)) {
     set_element_id(nodes[[k]], layer_index, ids[k])
   }
@@ -82,10 +96,11 @@ polygon_ring <- function(row) {
   cbind(row$x, row$y)
 }
 
-polygon_tracks <- function(union, frames, affine, precision, ids, ring) {
+polygon_tracks <- function(union, frames, affines, precision, ids, ring) {
   nframes <- nrow(union$presence)
   lapply(seq_len(ncol(union$presence)), function(k) {
     present <- union$presence[, k]
+    affine <- affines[[k]]
 
     verts <- vector("list", nframes)
     fill <- rep(NA_character_, nframes)

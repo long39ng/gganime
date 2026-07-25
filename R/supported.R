@@ -105,7 +105,7 @@ check_supported_prebuild <- function(plot, call = rlang::caller_env()) {
   abort_problems(problems, call)
 }
 
-# Post-build: coordinate system and panel count.
+# Post-build: coordinate system.
 check_supported_postbuild <- function(built, call = rlang::caller_env()) {
   problems <- character(0)
 
@@ -116,18 +116,6 @@ check_supported_postbuild <- function(built, call = rlang::caller_env()) {
       problems,
       x = cli::format_inline(
         "Coordinate system {.cls {cls}} is not supported; only {.fn coord_cartesian}."
-      )
-    )
-  }
-
-  if (length(built$layout$panel_params) != 1L) {
-    problems <- c(
-      problems,
-      x = cli::format_inline(
-        "Faceted plots are not supported yet; only a single panel renders."
-      ),
-      i = cli::format_inline(
-        "Drop {.fn facet_wrap}/{.fn facet_grid}, or animate each facet separately."
       )
     )
   }

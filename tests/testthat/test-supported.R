@@ -36,13 +36,15 @@ test_that("a gganim with no transition is rejected", {
   expect_snapshot(check_supported_prebuild(p), error = TRUE)
 })
 
-test_that("a faceted plot is rejected post-build", {
-  skip_if_not_installed("gridSVG")
+test_that("a faceted plot passes the post-build check", {
   p <- ggplot(mtcars, aes(mpg, wt)) +
     geom_point() +
     facet_wrap(~gear) +
     transition_states(cyl)
-  expect_snapshot(anime(p), error = TRUE)
+  p$nframes <- 4
+  built <- ggplot2::ggplot_build(p)
+  expect_gt(length(built$layout$panel_params), 1L)
+  expect_silent(check_supported_postbuild(built))
 })
 
 test_that("a non-Cartesian coord is rejected post-build", {
@@ -52,4 +54,14 @@ test_that("a non-Cartesian coord is rejected post-build", {
     coord_polar() +
     transition_states(cyl)
   expect_snapshot(anime(p), error = TRUE)
+})
+
+test_that("a faceted non-Cartesian coord is still rejected", {
+  skip_if_not_installed("gridSVG")
+  p <- ggplot(mtcars, aes(mpg, wt)) +
+    geom_point() +
+    coord_polar() +
+    facet_wrap(~gear) +
+    transition_states(cyl)
+  expect_error(anime(p), "Coordinate system")
 })

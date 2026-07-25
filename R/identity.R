@@ -37,6 +37,33 @@ repair_frame_ids <- function(frames, grouped = FALSE) {
   if (!frames_are_tweened(frames)) {
     return(frames)
   }
+  repair_by_panel(frames, function(f) repair_panel_ids(f, grouped))
+}
+
+# gganimate tweens each panel separately (`Transition$expand_layer()` splits on
+# PANEL), so the pairing to recover is per panel too: an aesthetic tuple can
+# recur in another panel, and `.id` restarts there. Repair each panel's rows on
+# their own and write `.id` back in place -- row order within a frame must not
+# change, because `element_ids()` keys unidentified rows by their position and
+# `union_data` row order becomes SVG document order.
+repair_by_panel <- function(frames, repair) {
+  panels <- unique(unlist(lapply(frames, function(d) as.character(d$PANEL))))
+  if (length(panels) < 2L) {
+    return(repair(frames))
+  }
+  for (panel in panels) {
+    rows <- lapply(frames, function(d) which(as.character(d$PANEL) == panel))
+    repaired <- repair(Map(function(d, i) d[i, , drop = FALSE], frames, rows))
+    for (f in seq_along(frames)) {
+      frames[[f]]$.id[rows[[f]]] <- repaired[[f]]$.id
+    }
+  }
+  frames
+}
+
+# One panel's frames: relabel each block from the pairing its opening tween
+# started from.
+repair_panel_ids <- function(frames, grouped) {
   if (grouped) {
     return(repair_leading_group_ids(frames))
   }
