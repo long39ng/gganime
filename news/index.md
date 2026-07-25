@@ -25,6 +25,14 @@
   with fixed or free scales. Every panel animates on the one timeline,
   and strips and per-panel axes are drawn once.
 
+- Coordinate systems:
+  [`coord_cartesian()`](https://ggplot2.tidyverse.org/reference/coord_cartesian.html),
+  [`coord_fixed()`](https://ggplot2.tidyverse.org/reference/coord_fixed.html)
+  /
+  [`coord_equal()`](https://ggplot2.tidyverse.org/reference/coord_fixed.html),
+  and
+  [`coord_flip()`](https://ggplot2.tidyverse.org/reference/coord_flip.html).
+
 - `enter_*()` and `exit_*()` transmuters,
   [`ease_aes()`](https://gganimate.com/reference/ease_aes.html),
   [`shadow_mark()`](https://gganimate.com/reference/shadow_mark.html),
@@ -49,6 +57,10 @@
   documents.
 
 - A plot using anything gganime cannot render stops with one message
-  naming the alternative. This covers non-Cartesian coordinate systems,
+  naming the alternative. This covers non-linear coordinate systems
+  ([`coord_polar()`](https://ggplot2.tidyverse.org/reference/coord_radial.html),
+  [`coord_radial()`](https://ggplot2.tidyverse.org/reference/coord_radial.html),
+  [`coord_transform()`](https://ggplot2.tidyverse.org/reference/coord_transform.html),
+  [`coord_sf()`](https://ggplot2.tidyverse.org/reference/ggsf.html)),
   `shadow_wake()` and `shadow_trail()`, and `view_*()` other than
   `view_static()`.

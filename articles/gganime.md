@@ -204,12 +204,28 @@ in the UI.
   [`transition_time()`](https://gganimate.com/reference/transition_time.html),
   [`transition_reveal()`](https://gganimate.com/reference/transition_reveal.html).
 - Geoms: points, lines and paths, bars and columns, areas and ribbons.
+- Facets:
+  [`facet_wrap()`](https://ggplot2.tidyverse.org/reference/facet_wrap.html)
+  and
+  [`facet_grid()`](https://ggplot2.tidyverse.org/reference/facet_grid.html),
+  with fixed or free scales.
+- Coords:
+  [`coord_cartesian()`](https://ggplot2.tidyverse.org/reference/coord_cartesian.html),
+  [`coord_fixed()`](https://ggplot2.tidyverse.org/reference/coord_fixed.html)
+  /
+  [`coord_equal()`](https://ggplot2.tidyverse.org/reference/coord_fixed.html),
+  and
+  [`coord_flip()`](https://ggplot2.tidyverse.org/reference/coord_flip.html).
 - `enter_*()` and `exit_*()`,
   [`ease_aes()`](https://gganimate.com/reference/ease_aes.html), and
   per-frame labels in the title, subtitle, and caption.
 - [`shadow_mark()`](https://gganimate.com/reference/shadow_mark.html).
 
 Anything else stops with a message naming an alternative. Current limits
-include faceted plots (only one panel renders), non-Cartesian coordinate
-systems, `shadow_wake()` and `shadow_trail()`, and `view_*()` other than
+include non-linear coordinate systems
+([`coord_polar()`](https://ggplot2.tidyverse.org/reference/coord_radial.html),
+[`coord_radial()`](https://ggplot2.tidyverse.org/reference/coord_radial.html),
+[`coord_transform()`](https://ggplot2.tidyverse.org/reference/coord_transform.html),
+[`coord_sf()`](https://ggplot2.tidyverse.org/reference/ggsf.html)),
+`shadow_wake()` and `shadow_trail()`, and `view_*()` other than
 `view_static()`.
