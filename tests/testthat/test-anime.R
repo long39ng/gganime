@@ -1,6 +1,3 @@
-skip_if_not_installed("gganimate")
-skip_if_not_installed("gridSVG")
-
 library(ggplot2)
 
 # Five points, all present in both states.

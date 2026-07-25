@@ -48,9 +48,6 @@ test_that("build_timeline emits an anime_text segment for a label element", {
 
 # --- integration -----------------------------------------------------------
 
-skip_if_not_installed("gganimate")
-skip_if_not_installed("gridSVG")
-
 library(ggplot2)
 
 time_plot <- function(title = "Year: {frame_time}", ...) {

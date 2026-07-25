@@ -1,5 +1,3 @@
-skip_if_not_installed("gganimate")
-
 library(ggplot2)
 library(gganimate)
 
@@ -48,7 +46,6 @@ test_that("a faceted plot passes the post-build check", {
 })
 
 test_that("a non-Cartesian coord is rejected post-build", {
-  skip_if_not_installed("gridSVG")
   p <- ggplot(mtcars, aes(mpg, wt)) +
     geom_point() +
     coord_polar() +
@@ -57,7 +54,6 @@ test_that("a non-Cartesian coord is rejected post-build", {
 })
 
 test_that("a faceted non-Cartesian coord is still rejected", {
-  skip_if_not_installed("gridSVG")
   p <- ggplot(mtcars, aes(mpg, wt)) +
     geom_point() +
     coord_polar() +

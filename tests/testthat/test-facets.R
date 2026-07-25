@@ -196,9 +196,6 @@ test_that("the union keeps elements of different panels apart", {
 })
 
 test_that("anime() renders every panel of a facet_wrap", {
-  skip_if_not_installed("gganimate")
-  skip_if_not_installed("gridSVG")
-
   df <- data.frame(
     facet = rep(c("a", "b"), each = 4),
     state = rep(c("s1", "s2"), 4),
@@ -215,13 +212,10 @@ test_that("anime() renders every panel of a facet_wrap", {
 
   # Two points per state per panel, animated in their own panel group.
   expect_equal(panel_of_elements(w), c("1", "1", "2", "2"))
-  expect_true(all(elements_within_panels(w)))
+  expect_within_panels(w)
 })
 
 test_that("a facet_grid element animates inside its own panel", {
-  skip_if_not_installed("gganimate")
-  skip_if_not_installed("gridSVG")
-
   df <- data.frame(
     row = rep(c("r1", "r2"), each = 8),
     col = rep(rep(c("c1", "c2"), each = 4), 2),
@@ -241,13 +235,10 @@ test_that("a facet_grid element animates inside its own panel", {
   # put panels 2 and 3 in each other's place, which the containment check below
   # then catches.
   expect_equal(panel_of_elements(w), rep(c("1", "3", "2", "4"), each = 2))
-  expect_true(all(elements_within_panels(w)))
+  expect_within_panels(w)
 })
 
 test_that("free scales animate each panel on its own range", {
-  skip_if_not_installed("gganimate")
-  skip_if_not_installed("gridSVG")
-
   df <- data.frame(
     facet = rep(c("a", "b"), each = 4),
     state = rep(c("s1", "s2"), 4),
@@ -261,13 +252,10 @@ test_that("free scales animate each panel on its own range", {
     transition_states(state, transition_length = 1, state_length = 1)
 
   w <- anime(p, nframes = 6, fps = 10)
-  expect_true(all(elements_within_panels(w)))
+  expect_within_panels(w)
 })
 
 test_that("free panel space animates each panel on its own rectangle", {
-  skip_if_not_installed("gganimate")
-  skip_if_not_installed("gridSVG")
-
   # Panel b holds twice as many categories as panel a, so space = "free" gives
   # the two panels different widths.
   df <- data.frame(
@@ -286,13 +274,10 @@ test_that("free panel space animates each panel on its own rectangle", {
   width <- function(panel) bounds[[panel]][2] - bounds[[panel]][1]
 
   expect_gt(width("2"), width("1"))
-  expect_true(all(elements_within_panels(w)))
+  expect_within_panels(w)
 })
 
 test_that("a facet_wrap with an empty grid cell renders", {
-  skip_if_not_installed("gganimate")
-  skip_if_not_installed("gridSVG")
-
   # Five facets in a 2x3 grid, so the last cell is empty.
   df <- data.frame(
     facet = rep(letters[1:5], each = 4),
@@ -307,13 +292,10 @@ test_that("a facet_wrap with an empty grid cell renders", {
 
   w <- anime(p, nframes = 6, fps = 10)
   expect_setequal(panel_of_elements(w), as.character(1:5))
-  expect_true(all(elements_within_panels(w)))
+  expect_within_panels(w)
 })
 
 test_that("faceted bars, lines and ribbons stay in their panels", {
-  skip_if_not_installed("gganimate")
-  skip_if_not_installed("gridSVG")
-
   bars <- data.frame(
     facet = rep(c("a", "b"), each = 6),
     state = rep(c("s1", "s2", "s3"), 4),
@@ -329,7 +311,7 @@ test_that("faceted bars, lines and ribbons stay in their panels", {
     fps = 10
   )
   expect_balanced_panels(w, 2L)
-  expect_true(all(elements_within_panels(w)))
+  expect_within_panels(w)
 
   paths <- data.frame(
     facet = rep(c("a", "b"), each = 6),
@@ -346,7 +328,7 @@ test_that("faceted bars, lines and ribbons stay in their panels", {
     fps = 10
   )
   expect_balanced_panels(w, 2L)
-  expect_true(all(elements_within_panels(w)))
+  expect_within_panels(w)
 
   w <- anime(
     ggplot(paths, aes(x, ymin = y - 0.5, ymax = y + 0.5)) +
@@ -357,13 +339,10 @@ test_that("faceted bars, lines and ribbons stay in their panels", {
     fps = 10
   )
   expect_balanced_panels(w, 2L)
-  expect_true(all(elements_within_panels(w)))
+  expect_within_panels(w)
 })
 
 test_that("a faceted shadow_mark keeps its marks in their own panels", {
-  skip_if_not_installed("gganimate")
-  skip_if_not_installed("gridSVG")
-
   df <- data.frame(
     facet = rep(c("a", "b"), each = 6),
     state = rep(c("s1", "s2", "s3"), 4),
@@ -381,13 +360,10 @@ test_that("a faceted shadow_mark keeps its marks in their own panels", {
 
   # Shadow marks come first in each panel, so both panels appear twice over.
   expect_setequal(panels, c("1", "2"))
-  expect_true(all(elements_within_panels(w)))
+  expect_within_panels(w)
 })
 
 test_that("a faceted plot keeps its per-frame title", {
-  skip_if_not_installed("gganimate")
-  skip_if_not_installed("gridSVG")
-
   df <- data.frame(
     facet = rep(c("a", "b"), each = 4),
     state = rep(c("s1", "s2"), 4),

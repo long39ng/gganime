@@ -44,6 +44,16 @@ panel_bounds <- function(doc) {
   })
 }
 
+# Every element that animates geometry stays inside its own panel. Asserting the
+# count first matters: only elements with a geometry track are checked, so a
+# fixture whose shapes never change (a constant track is dropped from the config)
+# would leave nothing to test and pass on the empty set.
+expect_within_panels <- function(widget, tolerance = 1) {
+  within <- elements_within_panels(widget, tolerance)
+  testthat::expect_gt(length(within), 0L)
+  testthat::expect_true(all(within))
+}
+
 # One logical per animated element that has geometry: does every value its
 # timeline animates to stay within its own panel? Constant tracks are dropped
 # from the config, so the reference SVG attributes stand in for them.

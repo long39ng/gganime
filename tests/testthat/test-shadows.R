@@ -206,9 +206,6 @@ test_that("shadow shape snapshot", {
 
 # --- integration -----------------------------------------------------------
 
-skip_if_not_installed("gganimate")
-skip_if_not_installed("gridSVG")
-
 library(ggplot2)
 
 shadow_point_plot <- function(past = TRUE, future = FALSE) {

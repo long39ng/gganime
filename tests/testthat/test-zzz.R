@@ -1,5 +1,3 @@
-skip_if_not_installed("gganimate")
-
 library(ggplot2)
 
 gganim_plot <- function() {
