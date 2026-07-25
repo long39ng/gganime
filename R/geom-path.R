@@ -48,7 +48,7 @@ gganime_element_tracks.GeomPath <- function(
         affine$to_svg_y(row$y)
       )
       stroke[f] <- to_hex(row$colour[1])
-      stroke_op[f] <- if (is.na(row$alpha[1])) 1 else row$alpha[1]
+      stroke_op[f] <- paint_opacity(row$alpha[1], row$colour[1])
     }
 
     verts <- normalise_vertices(verts)

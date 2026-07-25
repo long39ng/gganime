@@ -20,9 +20,10 @@
 #' @examples
 #' library(ggplot2)
 #'
-#' p <- ggplot(mtcars, aes(mpg, wt)) +
-#'   geom_point(aes(colour = factor(cyl))) +
-#'   transition_states(gear)
+#' p <- ggplot(iris, aes(Sepal.Width, Sepal.Length, size = Petal.Length)) +
+#'   geom_point(colour = "steelblue") +
+#'   labs(title = "{closest_state}") +
+#'   transition_states(Species)
 #'
 #' \donttest{
 #' anime(p, nframes = 20)
@@ -157,6 +158,7 @@ anime <- function(
 
   elements <- c(elements, annotate_labels(export$doc, spec$labels))
 
+  author_first_keyframes(export$doc, elements)
   svg <- finalize_svg(export$doc)
   timeline <- build_timeline(elements, nframes_real, spec$fps, loop, controls)
   gganime_widget(timeline, svg, width, height, elementId)

@@ -73,6 +73,49 @@ test_that("anime() encodes absence as an opacity channel on entering/exiting poi
   expect_false("cx" %in% names(entering$props))
 })
 
+test_that("the reference SVG is authored at each track's first keyframe", {
+  # Anime.js tweens from the authored attribute into keyframe 1, so any
+  # disagreement between the two shows for the first frame interval.
+  w <- anime(enter_exit_plot(), nframes = 20, fps = 10)
+  doc <- widget_doc(w)
+
+  for (segment in w$x$config$segments) {
+    id <- sub("^\\[data-animejs-id='(.*)'\\]$", "\\1", segment$selector)
+    node <- xml2::xml_find_first(
+      doc,
+      sprintf(".//*[@data-animejs-id='%s']", id)
+    )
+    for (attr in names(segment$props)) {
+      first <- segment$props[[attr]][[1]]$to
+      authored <- xml2::xml_attr(node, attr)
+      if (is.numeric(first)) {
+        authored <- as.numeric(authored)
+      }
+      expect_equal(authored, first, info = paste(id, attr))
+    }
+  }
+})
+
+test_that("an element absent from the first frame is authored invisible", {
+  w <- anime(enter_exit_plot(), nframes = 20, fps = 10)
+  doc <- widget_doc(w)
+
+  starts_hidden <- Filter(
+    function(s) identical(s$props$opacity[[1]]$to, 0),
+    w$x$config$segments
+  )
+  expect_gt(length(starts_hidden), 0)
+
+  for (segment in starts_hidden) {
+    id <- sub("^\\[data-animejs-id='(.*)'\\]$", "\\1", segment$selector)
+    node <- xml2::xml_find_first(
+      doc,
+      sprintf(".//*[@data-animejs-id='%s']", id)
+    )
+    expect_equal(xml2::xml_attr(node, "opacity"), "0", info = id)
+  }
+})
+
 test_that("precision controls coordinate rounding", {
   w <- anime(all_present_plot(), nframes = 6, fps = 10, precision = 0)
   cx <- unlist(w$x$config$segments[[1]]$props$cx)

@@ -322,6 +322,36 @@ set_element_id <- function(node, layer_index, id) {
   invisible(node)
 }
 
+# Write each track's first value onto its node.
+#
+# Anime.js tweens from an element's current attribute value into the first
+# keyframe, so an authored attribute that disagrees with keyframe 1 shows for
+# the first frame interval. Geometry agrees by construction: the reference is
+# the element's first-appearance row, and hold_absent() back-fills the frames
+# before it with that same row. Presence cannot -- gridSVG draws every union
+# element, including the ones that only appear later, and nothing in the
+# reference marks them as not yet drawn, so they would flash at full opacity
+# before the first interval carried them to 0.
+author_first_keyframes <- function(doc, elements) {
+  nodes <- xml2::xml_find_all(doc, ".//*[@data-animejs-id]")
+  ids <- vapply(elements, `[[`, character(1), "id")
+  at <- match(ids, xml2::xml_attr(nodes, "data-animejs-id"))
+  for (k in seq_along(elements)) {
+    if (is.na(at[k])) {
+      next
+    }
+    tracks <- elements[[k]]$tracks
+    for (a in names(tracks)) {
+      xml2::xml_set_attr(nodes[[at[k]]], a, svg_attr_value(tracks[[a]][[1]]))
+    }
+  }
+  invisible(doc)
+}
+
+svg_attr_value <- function(x) {
+  if (is.numeric(x)) format(x, trim = TRUE, scientific = FALSE) else x
+}
+
 # Serialise the document, dropping the fixed root width/height (keeping viewBox)
 # for resolution independence. xml2 cannot remove attributes, so patch the tag.
 finalize_svg <- function(doc) {

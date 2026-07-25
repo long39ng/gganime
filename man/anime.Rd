@@ -51,9 +51,10 @@ Anime.js, instead of gganimate's frame-by-frame output.
 \examples{
 library(ggplot2)
 
-p <- ggplot(mtcars, aes(mpg, wt)) +
-  geom_point(aes(colour = factor(cyl))) +
-  transition_states(gear)
+p <- ggplot(iris, aes(Sepal.Width, Sepal.Length, size = Petal.Length)) +
+  geom_point(colour = "steelblue") +
+  labs(title = "{closest_state}") +
+  transition_states(Species)
 
 \donttest{
 anime(p, nframes = 20)

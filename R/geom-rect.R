@@ -51,7 +51,7 @@ gganime_element_tracks.GeomRect <- function(
       w[f] <- affine$to_svg_x(row$xmax) - x0
       h[f] <- affine$to_svg_y(row$ymax) - y0
       fill[f] <- to_hex(row$fill)
-      fill_op[f] <- if (is.na(row$alpha)) 1 else row$alpha
+      fill_op[f] <- paint_opacity(row$alpha, row$fill)
     }
 
     tracks <- list()

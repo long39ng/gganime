@@ -72,7 +72,7 @@ gganime_element_tracks.GeomPoint <- function(
     # `shape` is constant per element, so the channel set is too.
     channels <- point_paint(union$union_data[k, , drop = FALSE])
 
-    cx <- cy <- r <- alpha <- rep(NA_real_, nframes)
+    cx <- cy <- r <- fill_op <- stroke_op <- rep(NA_real_, nframes)
     fill <- stroke <- rep(NA_character_, nframes)
     for (f in seq_len(nframes)) {
       if (!present[f]) {
@@ -90,7 +90,8 @@ gganime_element_tracks.GeomPoint <- function(
       paint <- point_paint(row)
       fill[f] <- paint$fill
       stroke[f] <- paint$stroke
-      alpha[f] <- if (is.na(row$alpha)) 1 else row$alpha
+      fill_op[f] <- paint$fill_opacity
+      stroke_op[f] <- paint$stroke_opacity
     }
 
     xy <- if (is_circle) c("cx", "cy") else c("x", "y")
@@ -103,15 +104,22 @@ gganime_element_tracks.GeomPoint <- function(
     # Animate only the channels the shape paints with. The default pch 19 draws
     # its disc *and* its outline in `colour`, so leaving `stroke` behind holds a
     # stale ring around a point whose fill has already tweened on; conversely,
-    # tweening `fill` on an open pch would paint over its `none`.
-    opacity_track <- round_track(hold_absent(alpha, present), precision)
+    # tweening `fill` on an open pch would paint over its `none`. pch 21-25 take
+    # their two channels from different aesthetics, so the opacities are tracked
+    # separately.
     if (!is.na(channels$fill)) {
       tracks$fill <- hold_absent(fill, present)
-      tracks[["fill-opacity"]] <- opacity_track
+      tracks[["fill-opacity"]] <- round_track(
+        hold_absent(fill_op, present),
+        precision
+      )
     }
     if (!is.na(channels$stroke)) {
       tracks$stroke <- hold_absent(stroke, present)
-      tracks[["stroke-opacity"]] <- opacity_track
+      tracks[["stroke-opacity"]] <- round_track(
+        hold_absent(stroke_op, present),
+        precision
+      )
     }
     tracks$opacity <- presence_opacity(present)
 
@@ -157,32 +165,27 @@ point_radius_px <- function(size, stroke, factor, res) {
   factor * fontsize * res / 72
 }
 
-# The colours a point is painted with, matching how the device draws each pch:
-# 0-14 are stroked in `colour` and unfilled, 15-18 are filled in `colour` with
-# no outline, 19-20 are both, and 21-25 are stroked in `colour` and filled from
-# the `fill` aesthetic. `NA` marks a channel the shape leaves at `none`.
+# The colours a point is painted with, plus each channel's opacity, matching
+# how the device draws each pch: 0-14 are stroked in `colour` and unfilled,
+# 15-18 are filled in `colour` with no outline, 19-20 are both, and 21-25 are
+# stroked in `colour` and filled from the `fill` aesthetic. `NA` marks a channel
+# the shape leaves at `none`.
 point_paint <- function(row) {
   shape <- row$shape
   filled <- !is.na(shape) && shape >= 15L
   outlined <- is.na(shape) || shape < 15L || shape > 18L
   fill <- if (!filled) {
-    NA
+    NA_character_
   } else if (shape >= 21L) {
     row$fill
   } else {
     row$colour
   }
+  stroke <- if (outlined) row$colour else NA_character_
   list(
-    fill = hex_or_na(fill),
-    stroke = if (outlined) hex_or_na(row$colour) else NA_character_
+    fill = to_hex(fill),
+    stroke = to_hex(stroke),
+    fill_opacity = paint_opacity(row$alpha, fill),
+    stroke_opacity = paint_opacity(row$alpha, stroke)
   )
-}
-
-hex_or_na <- function(x) {
-  if (is.na(x)) NA_character_ else to_hex(x)
-}
-
-to_hex <- function(x) {
-  m <- grDevices::col2rgb(x)
-  grDevices::rgb(m[1, ], m[2, ], m[3, ], maxColorValue = 255)
 }

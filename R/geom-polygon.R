@@ -110,7 +110,7 @@ polygon_tracks <- function(union, frames, affines, precision, ids, ring) {
       xy <- ring(row)
       verts[[f]] <- cbind(affine$to_svg_x(xy[, 1]), affine$to_svg_y(xy[, 2]))
       fill[f] <- to_hex(row$fill[1])
-      fill_op[f] <- if (is.na(row$alpha[1])) 1 else row$alpha[1]
+      fill_op[f] <- paint_opacity(row$alpha[1], row$fill[1])
     }
 
     verts <- normalise_vertices(verts)
