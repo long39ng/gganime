@@ -132,6 +132,31 @@ anim_species <- ggplot(iris, aes(Petal.Width, Petal.Length)) +
 anime(anim_species + enter_fade() + exit_shrink(), nframes = 30)
 ```
 
+## Several layers at once
+
+Layers are animated independently, so you can stack them the way you
+would in a static plot. Each layer keeps its own elements even when two
+layers draw the same kind of shape.
+
+``` r
+
+aq_layers <- ggplot(
+  airquality[airquality$Month %in% c(5, 6, 7), ],
+  aes(Day, Temp)
+) +
+  geom_area(fill = "#9ecae1") +
+  geom_line(linewidth = 1, colour = "#08519c") +
+  geom_point(size = 2, colour = "#a50f15") +
+  labs(title = "Month {closest_state}") +
+  transition_states(Month, transition_length = 2, state_length = 1)
+
+anime(aq_layers, nframes = 30)
+```
+
+A layer that does not use the transition variable is drawn once and left
+in place, which is how you add a fixed reference against the animated
+data.
+
 ## Leaving a trail
 
 [`shadow_mark()`](https://gganimate.com/reference/shadow_mark.html)
@@ -204,6 +229,8 @@ in the UI.
   [`transition_time()`](https://gganimate.com/reference/transition_time.html),
   [`transition_reveal()`](https://gganimate.com/reference/transition_reveal.html).
 - Geoms: points, lines and paths, bars and columns, areas and ribbons.
+- Several layers in one plot, including two of the same kind, and a
+  static layer beside an animated one.
 - Facets:
   [`facet_wrap()`](https://ggplot2.tidyverse.org/reference/facet_wrap.html)
   and

@@ -1,5 +1,25 @@
 # Changelog
 
+## gganime (development version)
+
+- Plots with more than one layer now render. Each layer’s grobs are
+  exported in their own group, so two layers of the same kind (two
+  [`geom_point()`](https://ggplot2.tidyverse.org/reference/geom_point.html)
+  layers, two
+  [`geom_col()`](https://ggplot2.tidyverse.org/reference/geom_bar.html)
+  layers) keep their own elements, and
+  [`geom_area()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html)
+  or
+  [`geom_ribbon()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html)
+  can be combined with
+  [`geom_line()`](https://ggplot2.tidyverse.org/reference/geom_path.html)
+  – previously the area’s invisible outline was mistaken for a second
+  line and the plot stopped with a count mismatch.
+
+- A layer that does not depend on the transition variable is drawn once
+  and left static, so a fixed reference layer can sit beside an animated
+  one.
+
 ## gganime 0.1.0
 
 - First release.

@@ -34,6 +34,11 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="development version" id="gganime-development-version">gganime (development version)<a class="anchor" aria-label="anchor" href="#gganime-development-version"></a></h2>
+<ul><li><p>Plots with more than one layer now render. Each layer’s grobs are exported in their own group, so two layers of the same kind (two <code><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point()</a></code> layers, two <code><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html" class="external-link">geom_col()</a></code> layers) keep their own elements, and <code><a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html" class="external-link">geom_area()</a></code> or <code><a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html" class="external-link">geom_ribbon()</a></code> can be combined with <code><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line()</a></code> – previously the area’s invisible outline was mistaken for a second line and the plot stopped with a count mismatch.</p></li>
+<li><p>A layer that does not depend on the transition variable is drawn once and left static, so a fixed reference layer can sit beside an animated one.</p></li>
+</ul></div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="gganime-010">gganime 0.1.0<a class="anchor" aria-label="anchor" href="#gganime-010"></a></h2>
 <ul><li><p>First release. <code><a href="../reference/anime.html">anime()</a></code> renders a ggplot2 plot written with gganimate syntax as an animated SVG, returned as a self-contained htmlwidget driven by Anime.js, in place of gganimate’s frame-by-frame GIF or video. The scene is drawn once and each element carries its own keyframes, so the animation stays sharp at any size and plays in the browser with a scrub bar.</p></li>
 <li><p>Transitions: <code><a href="https://gganimate.com/reference/transition_states.html" class="external-link">transition_states()</a></code>, <code><a href="https://gganimate.com/reference/transition_time.html" class="external-link">transition_time()</a></code>, <code><a href="https://gganimate.com/reference/transition_reveal.html" class="external-link">transition_reveal()</a></code>.</p></li>
@@ -46,7 +51,8 @@
 <li><p><code><a href="../reference/gganime-shiny.html">gganimeOutput()</a></code> and <code><a href="../reference/gganime-shiny.html">renderGganime()</a></code> embed a widget in Shiny applications and interactive R Markdown documents.</p></li>
 <li><p>A plot using anything gganime cannot render stops with one message naming the alternative. This covers non-linear coordinate systems (<code><a href="https://ggplot2.tidyverse.org/reference/coord_radial.html" class="external-link">coord_polar()</a></code>, <code><a href="https://ggplot2.tidyverse.org/reference/coord_radial.html" class="external-link">coord_radial()</a></code>, <code><a href="https://ggplot2.tidyverse.org/reference/coord_transform.html" class="external-link">coord_transform()</a></code>, <code><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">coord_sf()</a></code>), <code>shadow_wake()</code> and <code>shadow_trail()</code>, and <code>view_*()</code> other than <code>view_static()</code>.</p></li>
 </ul></div>
-  </main></div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">

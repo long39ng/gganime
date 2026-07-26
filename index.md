@@ -102,6 +102,8 @@ and
   [`transition_time()`](https://gganimate.com/reference/transition_time.html),
   [`transition_reveal()`](https://gganimate.com/reference/transition_reveal.html).
 - Geoms: points, lines and paths, bars and columns, areas and ribbons.
+- Several layers in one plot, including two of the same kind, and a
+  static layer beside an animated one.
 - Facets:
   [`facet_wrap()`](https://ggplot2.tidyverse.org/reference/facet_wrap.html)
   and
