@@ -13,12 +13,17 @@ element_key <- function(df) {
 
 # `.id` as a key component. tweenr leaves it unset on rows that arrive without
 # an enter transmuter -- the wrap frame of a `transition_states()` loop is full
-# of them -- and those rows carry no identity to match on. Key them by their
+# of them -- and those rows carry no identity to match on. A static layer has no
+# `.id` column at all, since tweenr never touched it. Key such rows by their
 # position in the frame instead, marked with "*" so it cannot collide with a
 # real `.id`: frames that repeat the same state then keep the same elements, and
 # two unidentified rows never collapse onto one union slot.
 element_ids <- function(df) {
-  id <- as.character(df$.id)
+  id <- if (is.null(df$.id)) {
+    rep(NA_character_, nrow(df))
+  } else {
+    as.character(df$.id)
+  }
   unnamed <- which(is.na(id))
   id[unnamed] <- paste0("*", unnamed)
   id

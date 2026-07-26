@@ -13,10 +13,18 @@ build_scene_spec <- function(built, fps) {
   layers <- lapply(seq_along(built$data), function(i) {
     frames <- built$data[[i]]
     geom_class <- class(plot_layers[[i]]$geom)
+    # A layer that does not depend on the transition variable is built as a
+    # single frame rather than one per frame. Repeating it across the timeline
+    # lets it share the union and adapter path: every track then comes out
+    # constant and is dropped, so it is drawn once and never animates.
+    static <- length(frames) == 1L
+    if (static) {
+      frames <- rep(frames, built$scene$nframes)
+    }
     list(
       frames = repair_frame_ids(frames, grouped = geom_is_grouped(geom_class)),
       geom_class = geom_class,
-      static = length(frames) == 1L
+      static = static
     )
   })
 

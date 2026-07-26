@@ -2,26 +2,33 @@ library(ggplot2)
 
 # A faceted export, in the shape gridSVG produces: one viewport group per panel
 # (named after the gtable cell, `panel-<col>-<row>`) wrapping one gTree group
-# named after the PANEL. A 2x2 facet_grid is drawn column-major, so the document
-# order of the panel groups is PANEL 1, 3, 2, 4.
+# named after the PANEL, which in turn holds one `gganime.L<i>` group per layer
+# (see name_layer_grobs()). A 2x2 facet_grid is drawn column-major, so the
+# document order of the panel groups is PANEL 1, 3, 2, 4.
 facet_grid_doc <- function() {
   doc <- xml2::read_xml(
     '<svg xmlns="http://www.w3.org/2000/svg">
        <g id="layout::panel-1-1.10-7-10-7::GRID.VP.13.1">
          <g id="panel-1.gTree.219.1">
            <polyline id="panel.grid.major.y..polyline.1.1"/>
-           <use id="geom_point.points.194.1.1"/>
-           <use id="geom_point.points.194.1.2"/>
+           <g id="gganime.L1.194.1">
+             <use id="gganime.L1.194.1.1"/>
+             <use id="gganime.L1.194.1.2"/>
+           </g>
          </g>
        </g>
        <g id="layout::panel-1-2.12-7-12-7::GRID.VP.16.1">
          <g id="panel-3.gTree.264.1">
-           <use id="geom_point.points.239.1.1"/>
+           <g id="gganime.L1.239.1">
+             <use id="gganime.L1.239.1.1"/>
+           </g>
          </g>
        </g>
        <g id="layout::panel-2-1.10-9-10-9::GRID.VP.14.1">
          <g id="panel-2.gTree.234.1">
-           <use id="geom_point.points.209.1.1"/>
+           <g id="gganime.L1.209.1">
+             <use id="gganime.L1.209.1.1"/>
+           </g>
          </g>
        </g>
        <g id="layout::panel-2-2.12-9-12-9::GRID.VP.17.1">
@@ -142,30 +149,32 @@ test_that("panel_affines reports a panel with no exported rectangle", {
 
 test_that("panel_data_nodes selects within one panel only", {
   doc <- facet_grid_doc()
-  expect_length(panel_data_nodes(doc, "use", "1"), 2L)
-  expect_length(panel_data_nodes(doc, "use", "3"), 1L)
+  expect_length(panel_data_nodes(doc, "use", "1", 1L), 2L)
+  expect_length(panel_data_nodes(doc, "use", "3", 1L), 1L)
   # Grid lines are excluded even though they are inside the panel group.
-  expect_length(panel_data_nodes(doc, "polyline", "1"), 0L)
+  expect_length(panel_data_nodes(doc, "polyline", "1", 1L), 0L)
+  # Layer scoping composes with panel scoping: no layer 2 in this export.
+  expect_length(panel_data_nodes(doc, "use", "1", 2L), 0L)
 })
 
 test_that("ordered_data_nodes interleaves panels back into union order", {
   # Union order is first appearance then PANEL, so a panel's elements need not
   # be contiguous: element 2 is in PANEL 3, elements 1 and 3 in PANEL 1.
-  nodes <- point_nodes(facet_grid_doc(), panels = c("1", "3", "1"))
+  nodes <- point_nodes(facet_grid_doc(), 1L, panels = c("1", "3", "1"))
 
   expect_equal(
     vapply(nodes, function(n) xml2::xml_attr(n, "id"), character(1)),
     c(
-      "geom_point.points.194.1.1",
-      "geom_point.points.239.1.1",
-      "geom_point.points.194.1.2"
+      "gganime.L1.194.1.1",
+      "gganime.L1.239.1.1",
+      "gganime.L1.194.1.2"
     )
   )
 })
 
 test_that("a per-panel count mismatch names the panel", {
   expect_snapshot(
-    point_nodes(facet_grid_doc(), panels = c("1", "1", "1")),
+    point_nodes(facet_grid_doc(), 1L, panels = c("1", "1", "1")),
     error = TRUE
   )
 })

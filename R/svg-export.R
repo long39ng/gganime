@@ -294,16 +294,29 @@ in_panel_group <- function(panel) {
   sprintf("ancestor::g[starts-with(@id, 'panel-%s.gTree')]", panel)
 }
 
-# Data elements of one panel: the `<tag>` nodes inside its panel group that are
-# not grid lines. Axis ticks and legend keys are drawn outside the panel group,
-# so this returns exactly the drawn data, in document order. GeomPath and
-# GeomPolygon share this because their grobs have no geom-name id prefix (unlike
-# points/rects) -- only panel membership distinguishes them.
-panel_data_nodes <- function(doc, tag, panel) {
+# XPath predicate matching nodes inside one layer's group. name_layer_grobs()
+# renames each panel's layer grobs, so the export carries a `<g>` per layer whose
+# id is that name plus a counter suffix -- hence the trailing "." here.
+in_layer_group <- function(layer_index) {
+  sprintf(
+    "ancestor::g[starts-with(@id, '%s.')]",
+    layer_group_name(layer_index)
+  )
+}
+
+# Data elements of one layer within one panel: the `<tag>` nodes inside both
+# groups that are not grid lines. Axis ticks and legend keys are drawn outside
+# the panel group, so this returns that layer's drawn data in document order.
+# Panel membership alone is not enough -- grob names encode the geom, not the
+# layer (and GeomPath supplies none), so two layers of the same family share one
+# selector and a geom_ribbon layer's `stroke: none` outline polyline reaches the
+# path adapter.
+panel_data_nodes <- function(doc, tag, panel, layer_index) {
   xpath <- sprintf(
-    ".//%s[not(starts-with(@id, 'panel.grid')) and %s]",
+    ".//%s[not(starts-with(@id, 'panel.grid')) and %s and %s]",
     tag,
-    in_panel_group(panel)
+    in_panel_group(panel),
+    in_layer_group(layer_index)
   )
   xml2::xml_find_all(doc, xpath)
 }
@@ -313,11 +326,19 @@ panel_data_nodes <- function(doc, tag, panel) {
 # panel's nodes in document order; within a panel the two orders agree, because
 # ggplot2 draws a panel's rows in the order the union wrote them. Across panels
 # they do not, hence the per-panel gather rather than one document-wide search.
-ordered_data_nodes <- function(doc, select, panels, element, tag, hint = NULL) {
+ordered_data_nodes <- function(
+  doc,
+  select,
+  layer_index,
+  panels,
+  element,
+  tag,
+  hint = NULL
+) {
   positions <- split(seq_along(panels), factor(panels, levels = unique(panels)))
   nodes <- vector("list", length(panels))
   for (panel in names(positions)) {
-    found <- select(doc, panel)
+    found <- select(doc, panel, layer_index)
     at <- positions[[panel]]
     if (length(found) != length(at)) {
       cli::cli_abort(c(

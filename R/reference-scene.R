@@ -30,7 +30,56 @@ render_union_gtable <- function(
       frame$plot$labels[[el]] <- as.character(frame$plot$labels[[el]])
     }
   }
-  frame_gtable(frame)
+  name_layer_grobs(frame_gtable(frame), length(frame$data))
+}
+
+# The grob name given to layer `i` in every panel. gridSVG names a `<g>` after
+# the grob it exports, so this becomes the layer's group id (see in_layer_group()).
+layer_group_name <- function(layer_index) {
+  paste0("gganime.L", layer_index)
+}
+
+# How many of a panel's children come before layer 1: normally the coord
+# background (the grill) then facet_bg, but `panel.ontop = TRUE` draws the grill
+# second to last instead, leaving facet_bg alone in front.
+panel_layer_offset <- function(children) {
+  n <- length(children)
+  grill_last <- startsWith(children[[n - 1L]]$name %||% "", "grill")
+  if (grill_last) 1L else 2L
+}
+
+# Rename each panel's per-layer grobs so the export carries a group per layer.
+# ggplot2 builds a panel's children as `c(facet_bg, <one grob per layer, in layer
+# order>, facet_fg)` (Facet$draw_panel_content) and Coord$draw_panel wraps that
+# with one background and one foreground grob, so a panel has `n_layers + 4`
+# children. Static layers still occupy a slot, so a child's position matches its
+# index in `spec$layers`.
+name_layer_grobs <- function(gtable, n_layers) {
+  cells <- which(grepl("^panel", gtable$layout$name))
+  for (cell in cells) {
+    panel <- gtable$grobs[[cell]]
+    # An empty facet_wrap grid cell is a zeroGrob: nothing is drawn there, so
+    # there are no nodes to attribute.
+    if (inherits(panel, "zeroGrob")) {
+      next
+    }
+    children <- panel$children
+    n <- length(children)
+    if (is.null(children) || n != n_layers + 4L) {
+      cli::cli_abort(c(
+        "Cannot identify the layer grobs of a panel.",
+        x = "{.val {gtable$layout$name[[cell]]}} has {n} child grob{?s}, expected {n_layers + 4}.",
+        i = "This is a ggplot2 layout change; gganime needs updating."
+      ))
+    }
+    offset <- panel_layer_offset(children)
+    for (i in seq_len(n_layers)) {
+      children[[offset + i]]$name <- layer_group_name(i)
+    }
+    # setChildren() re-derives names and childrenOrder from the grob names.
+    gtable$grobs[[cell]] <- grid::setChildren(panel, children)
+  }
+  gtable
 }
 
 # Rewrap a gganim_built frame as a ggplot_built so ggplot_gtable() dispatches.

@@ -93,24 +93,35 @@ test_that("rect geometry follows the y-up affine: y = ymin edge, height > 0", {
   expect_equal(el$tracks$height, c(12, 15)) # positive, top edge minus bottom
 })
 
-test_that("rect_nodes selects only geom_rect data rects, in document order", {
+test_that("rect_nodes selects only its own layer's data rects, in document order", {
+  # Two geom_col layers: without layer scoping both selectors match all four
+  # rects and the union count check aborts.
   doc <- xml2::read_xml(
     '<svg xmlns="http://www.w3.org/2000/svg">
        <g id="panel-1.gTree.16.1">
-         <rect id="panel.background.1"/>
-         <g id="geom_rect.rect.2.1">
-           <rect id="geom_rect.rect.2.1.1"/>
-           <rect id="geom_rect.rect.2.1.2"/>
+         <g id="grill.gTree.3"><rect id="panel.background.1"/></g>
+         <g id="gganime.L1.2.1">
+           <rect id="gganime.L1.2.1.1"/>
+           <rect id="gganime.L1.2.1.2"/>
+         </g>
+         <g id="gganime.L2.4.1">
+           <rect id="gganime.L2.4.1.1"/>
+           <rect id="gganime.L2.4.1.2"/>
          </g>
        </g>
        <rect id="key-1-1-bg"/>
      </svg>'
   )
   xml2::xml_ns_strip(doc)
-  nodes <- rect_nodes(doc, panels = c("1", "1"))
-  expect_equal(length(nodes), 2)
+  ids <- function(nodes) {
+    vapply(nodes, function(n) xml2::xml_attr(n, "id"), character(1))
+  }
   expect_equal(
-    vapply(nodes, function(n) xml2::xml_attr(n, "id"), character(1)),
-    c("geom_rect.rect.2.1.1", "geom_rect.rect.2.1.2")
+    ids(rect_nodes(doc, 1L, panels = c("1", "1"))),
+    c("gganime.L1.2.1.1", "gganime.L1.2.1.2")
+  )
+  expect_equal(
+    ids(rect_nodes(doc, 2L, panels = c("1", "1"))),
+    c("gganime.L2.4.1.1", "gganime.L2.4.1.2")
   )
 })

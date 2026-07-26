@@ -94,6 +94,8 @@ In Shiny, use `gganimeOutput()` and `renderGganime()`.
 - Transitions: `transition_states()`, `transition_time()`,
   `transition_reveal()`.
 - Geoms: points, lines and paths, bars and columns, areas and ribbons.
+- Several layers in one plot, including two of the same kind, and a static
+  layer beside an animated one.
 - Facets: `facet_wrap()` and `facet_grid()`, with fixed or free scales.
 - Coords: `coord_cartesian()`, `coord_fixed()` / `coord_equal()`, and
   `coord_flip()`.

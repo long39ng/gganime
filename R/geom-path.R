@@ -16,7 +16,7 @@ gganime_annotate.GeomPath <- function(
   panels,
   ...
 ) {
-  nodes <- path_nodes(doc, panels)
+  nodes <- path_nodes(doc, layer_index, panels)
   for (k in seq_along(nodes)) {
     set_element_id(nodes[[k]], layer_index, ids[k])
   }
@@ -71,10 +71,13 @@ gganime_element_tracks.GeomPath <- function(
 # --- path helpers ----------------------------------------------------------
 
 # The layer's <polyline> data nodes in union order, gathered per panel.
-path_nodes <- function(doc, panels) {
+path_nodes <- function(doc, layer_index, panels) {
   ordered_data_nodes(
     doc,
-    function(doc, panel) panel_data_nodes(doc, "polyline", panel),
+    function(doc, panel, layer_index) {
+      panel_data_nodes(doc, "polyline", panel, layer_index)
+    },
+    layer_index,
     panels,
     "Line",
     "polyline",

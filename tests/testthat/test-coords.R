@@ -19,7 +19,7 @@ export_static <- function(plot) {
   built <- ggplot2::ggplot_build(plot)
   res <- 96
   export <- export_scene_svg(
-    ggplot2::ggplot_gtable(built),
+    name_layer_grobs(ggplot2::ggplot_gtable(built), length(built$data)),
     build_panel_ranges(built),
     res = res,
     width = 640 / res,
@@ -77,7 +77,7 @@ test_that("points land where each affine coord draws them", {
     static <- export_static(
       ggplot(coord_points(), aes(x, y)) + geom_point(size = 3) + coords[[name]]
     )
-    nodes <- point_nodes(static$export$doc, rep("1", nrow(static$data)))
+    nodes <- point_nodes(static$export$doc, 1L, rep("1", nrow(static$data)))
     expect_same_position(
       cbind(node_attr(nodes, "x"), node_attr(nodes, "y")),
       affine_xy(static$export$panels[["1"]], static$data$x, static$data$y),
@@ -92,7 +92,7 @@ test_that("a flipped bar keeps its origin corner and positive extents", {
       geom_col() +
       coord_flip()
   )
-  nodes <- rect_nodes(static$export$doc, rep("1", nrow(static$data)))
+  nodes <- rect_nodes(static$export$doc, 1L, rep("1", nrow(static$data)))
   affine <- static$export$panels[["1"]]
   low <- affine_xy(affine, static$data$xmin, static$data$ymin)
   high <- affine_xy(affine, static$data$xmax, static$data$ymax)

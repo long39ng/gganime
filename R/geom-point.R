@@ -32,7 +32,7 @@ gganime_annotate.GeomPoint <- function(
   panels,
   ...
 ) {
-  nodes <- point_nodes(doc, panels)
+  nodes <- point_nodes(doc, layer_index, panels)
   info <- point_symbol_info(union_data, symbols)
   for (k in seq_along(nodes)) {
     if (info[[k]]$is_circle) {
@@ -132,18 +132,19 @@ gganime_element_tracks.GeomPoint <- function(
 # --- point helpers ---------------------------------------------------------
 
 # The layer's <use> point nodes in union order, gathered per panel.
-point_nodes <- function(doc, panels) {
-  ordered_data_nodes(doc, select_point_nodes, panels, "Point", "point")
+point_nodes <- function(doc, layer_index, panels) {
+  ordered_data_nodes(
+    doc,
+    select_point_nodes,
+    layer_index,
+    panels,
+    "Point",
+    "point"
+  )
 }
 
-select_point_nodes <- function(doc, panel) {
-  xml2::xml_find_all(
-    doc,
-    sprintf(
-      ".//use[starts-with(@id,'geom_point') and %s]",
-      in_panel_group(panel)
-    )
-  )
+select_point_nodes <- function(doc, panel, layer_index) {
+  panel_data_nodes(doc, "use", panel, layer_index)
 }
 
 # Per-element pch symbol resolution: circular pch inline to <circle>.

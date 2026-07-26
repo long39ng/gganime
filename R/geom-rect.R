@@ -15,7 +15,7 @@ gganime_annotate.GeomRect <- function(
   panels,
   ...
 ) {
-  nodes <- rect_nodes(doc, panels)
+  nodes <- rect_nodes(doc, layer_index, panels)
   for (k in seq_along(nodes)) {
     set_element_id(nodes[[k]], layer_index, ids[k])
   }
@@ -80,18 +80,17 @@ gganime_element_tracks.GeomRect <- function(
 # --- rect helpers ----------------------------------------------------------
 
 # The layer's <rect> data nodes in union order, gathered per panel.
-# GeomCol/GeomBar/GeomRect all draw a grob named "geom_rect", so one id prefix
-# covers the three; theme and legend rects have other ids.
-rect_nodes <- function(doc, panels) {
-  ordered_data_nodes(doc, select_rect_nodes, panels, "Rect", "rect")
+rect_nodes <- function(doc, layer_index, panels) {
+  ordered_data_nodes(
+    doc,
+    select_rect_nodes,
+    layer_index,
+    panels,
+    "Rect",
+    "rect"
+  )
 }
 
-select_rect_nodes <- function(doc, panel) {
-  xml2::xml_find_all(
-    doc,
-    sprintf(
-      ".//rect[starts-with(@id,'geom_rect') and %s]",
-      in_panel_group(panel)
-    )
-  )
+select_rect_nodes <- function(doc, panel, layer_index) {
+  panel_data_nodes(doc, "rect", panel, layer_index)
 }

@@ -20,7 +20,7 @@
 # a per-panel count mismatch names the panel
 
     Code
-      point_nodes(facet_grid_doc(), panels = c("1", "1", "1"))
+      point_nodes(facet_grid_doc(), 1L, panels = c("1", "1", "1"))
     Condition
       Error in `ordered_data_nodes()`:
       ! Point element count does not match the union.

@@ -66,10 +66,13 @@ gganime_element_tracks.GeomPolygon <- function(
 # --- polygon helpers -------------------------------------------------------
 
 # The layer's <polygon> data nodes in union order, gathered per panel.
-polygon_nodes <- function(doc, panels) {
+polygon_nodes <- function(doc, layer_index, panels) {
   ordered_data_nodes(
     doc,
-    function(doc, panel) panel_data_nodes(doc, "polygon", panel),
+    function(doc, panel, layer_index) {
+      panel_data_nodes(doc, "polygon", panel, layer_index)
+    },
+    layer_index,
     panels,
     "Polygon",
     "polygon"
@@ -77,7 +80,7 @@ polygon_nodes <- function(doc, panels) {
 }
 
 annotate_polygons <- function(doc, layer_index, ids, panels) {
-  nodes <- polygon_nodes(doc, panels)
+  nodes <- polygon_nodes(doc, layer_index, panels)
   for (k in seq_along(nodes)) {
     set_element_id(nodes[[k]], layer_index, ids[k])
   }
