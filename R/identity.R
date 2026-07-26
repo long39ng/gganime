@@ -19,8 +19,9 @@
 # group itself does not survive into the built frames -- gganimate renumbers it
 # per (group, frame) in `finish_data()`, so the integers of two frames never
 # overlap -- but the aesthetics that define it do. So pair on the j-th occurrence
-# of each aesthetic tuple, built from the columns that are constant within every
-# group, and only where that tuple is one-to-one with `group` in both frames.
+# of each aesthetic tuple, built from the discrete columns that are constant
+# within every group, and only where that tuple is one-to-one with `group` in
+# both frames.
 # Where it is not (a `group` finer than the aesthetics), the boundary keeps
 # tweenr's ids and the artefact stays.
 
@@ -31,13 +32,15 @@
 #'   layers only get the leading-frame repair below: pairing them across a state
 #'   boundary needs vertex-level care, and their tuple is one-to-one with `group`
 #'   only when every line differs in an aesthetic.
+#' @param discrete Position columns that hold a discrete position, from
+#'   `discrete_position_columns()`. These join the aesthetic tuple.
 #' @return `frames` with `.id` rewritten on the frames that could be repaired.
 #' @noRd
-repair_frame_ids <- function(frames, grouped = FALSE) {
+repair_frame_ids <- function(frames, grouped = FALSE, discrete = character()) {
   if (!frames_are_tweened(frames)) {
     return(frames)
   }
-  repair_by_panel(frames, function(f) repair_panel_ids(f, grouped))
+  repair_by_panel(frames, function(f) repair_panel_ids(f, grouped, discrete))
 }
 
 # gganimate tweens each panel separately (`Transition$expand_layer()` splits on
@@ -63,7 +66,7 @@ repair_by_panel <- function(frames, repair) {
 
 # One panel's frames: relabel each block from the pairing its opening tween
 # started from.
-repair_panel_ids <- function(frames, grouped) {
+repair_panel_ids <- function(frames, grouped, discrete) {
   if (grouped) {
     return(repair_leading_group_ids(frames))
   }
@@ -79,7 +82,7 @@ repair_panel_ids <- function(frames, grouped) {
     if (is.null(from) || is.null(raw_frame(to))) {
       next
     }
-    pairs <- tuple_pairs(from, to)
+    pairs <- tuple_pairs(from, to, discrete)
     if (is.null(pairs)) {
       next
     }
@@ -160,11 +163,22 @@ id_blocks <- function(frames) {
   ids <- lapply(frames, `[[`, ".id")
   starts <- 1L
   for (f in seq_along(frames)[-1]) {
-    if (!identical(ids[[f]], ids[[f - 1L]])) {
+    shifted <- !identical(ids[[f]], ids[[f - 1L]])
+    if (shifted || tween_landed(frames[[f - 1L]], frames[[f]])) {
       starts <- c(starts, f)
     }
   }
   Map(seq.int, starts, c(starts[-1] - 1L, length(frames)))
+}
+
+# The labelling does not always shift at a boundary. tweenr reuses the `.id` an
+# element vacated for one arriving at the same boundary, so a state that replaces
+# one element with another keeps the same `.id` vector in every frame, and the two
+# elements share a single union slot that interpolates between their positions
+# over one frame interval. `.phase` marks the boundary independently: a tween
+# lands on the first frame of unmodified data after an interpolated one.
+tween_landed <- function(before, after) {
+  !is.null(raw_frame(after)) && is.null(raw_frame(before))
 }
 
 # A frame of unmodified data. tweenr's interpolated rows carry blended
@@ -186,8 +200,8 @@ last_raw_frame <- function(block) {
 
 # The pairing tweenr recorded, as a `from` row per `to` row, or NULL when the
 # aesthetic tuple cannot stand in for `group`.
-tuple_pairs <- function(from, to) {
-  cols <- group_constant_columns(from, to)
+tuple_pairs <- function(from, to, discrete = character()) {
+  cols <- group_constant_columns(from, to, discrete)
   if (length(cols) == 0L) {
     return(NULL)
   }
@@ -205,19 +219,31 @@ tuple_pairs <- function(from, to) {
   )
 }
 
-# Aesthetic columns constant within every group of both frames: only these can
-# stand in for `group`. A continuous aesthetic (e.g. `size = hp`) varies within
-# its group and drops out here, which is what keeps the tuple usable.
-group_constant_columns <- function(from, to) {
+# The columns that can stand in for `group`: the discrete ones, constant within
+# every group of both frames. ggplot2 derives `group` from the interaction of a
+# layer's discrete aesthetics, so a mapped colour or fill identifies an element.
+# A continuous aesthetic (`size = x`) and every position hold values tweenr
+# interpolates from one frame to the other, which no longer match. `discrete`
+# adds back the positions whose scale is discrete, where the value is a
+# category's mapped location and both frames hold the same one.
+group_constant_columns <- function(from, to, discrete = character()) {
   cols <- setdiff(
     intersect(names(from), names(to)),
-    c("x", "y", "PANEL", "group", ".id", ".phase", ".frame")
+    c("PANEL", "group", ".id", ".phase", ".frame")
   )
-  cols[vapply(
-    cols,
-    function(col) is_group_constant(from, col) && is_group_constant(to, col),
-    logical(1)
-  )]
+  keeps <- function(col) {
+    (col %in%
+      discrete ||
+      (is_discrete(from[[col]]) && is_discrete(to[[col]]))) &&
+      is_group_constant(from, col) &&
+      is_group_constant(to, col)
+  }
+  cols[vapply(cols, keeps, logical(1))]
+}
+
+# ggplot2's own test for a column it would group on.
+is_discrete <- function(x) {
+  is.factor(x) || is.character(x) || is.logical(x)
 }
 
 is_group_constant <- function(df, col) {

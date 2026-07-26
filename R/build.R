@@ -9,6 +9,7 @@
 #' @noRd
 build_scene_spec <- function(built, fps) {
   plot_layers <- built$plot$layers
+  discrete <- discrete_position_columns(built)
 
   layers <- lapply(seq_along(built$data), function(i) {
     frames <- built$data[[i]]
@@ -22,7 +23,11 @@ build_scene_spec <- function(built, fps) {
       frames <- rep(frames, built$scene$nframes)
     }
     list(
-      frames = repair_frame_ids(frames, grouped = geom_is_grouped(geom_class)),
+      frames = repair_frame_ids(
+        frames,
+        grouped = geom_is_grouped(geom_class),
+        discrete = discrete
+      ),
       geom_class = geom_class,
       static = static
     )
@@ -41,6 +46,24 @@ build_scene_spec <- function(built, fps) {
     ),
     class = "gganime_scene_spec"
   )
+}
+
+# The data columns whose position comes from a discrete scale. A category keeps
+# its mapped position across every state, so `repair_frame_ids()` can pair
+# elements on it where no aesthetic tells them apart. A bar chart is the usual
+# case. The frames hold data columns, so the scales are read unswapped even under
+# `coord_flip()`.
+discrete_position_columns <- function(built) {
+  c(
+    if (panel_scale_is_discrete(built$layout$panel_scales_x)) "x",
+    if (panel_scale_is_discrete(built$layout$panel_scales_y)) "y"
+  )
+}
+
+# Free scales give one scale per panel row or column; discreteness is a property
+# of the mapped column, so any of them answers for all.
+panel_scale_is_discrete <- function(scales) {
+  length(scales) > 0L && isTRUE(scales[[1L]]$is_discrete())
 }
 
 # Shadow spec: NULL unless the plot carries a shadow_mark(). ShadowMark's train
