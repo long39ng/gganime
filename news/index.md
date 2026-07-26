@@ -20,6 +20,21 @@
   and left static, so a fixed reference layer can sit beside an animated
   one.
 
+- An element that leaves a state as another arrives no longer inherits
+  its place. The two now animate as separate elements, so the arriving
+  one appears where its own data puts it instead of sliding in from the
+  other’s position. This shape comes up whenever a state swaps one
+  element for another and no `enter_*()`/`exit_*()` is set, which is
+  gganimate’s default.
+
+- Bars keep their identity across a state boundary. A
+  [`geom_col()`](https://ggplot2.tidyverse.org/reference/geom_bar.html)
+  or
+  [`geom_bar()`](https://ggplot2.tidyverse.org/reference/geom_bar.html)
+  layer whose categories change between states previously redrew every
+  bar as a new element, so bars that were present throughout blinked out
+  and back at each boundary.
+
 ## gganime 0.1.0
 
 - First release.

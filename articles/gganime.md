@@ -132,6 +132,24 @@ anim_species <- ggplot(iris, aes(Petal.Width, Petal.Length)) +
 anime(anim_species + enter_fade() + exit_shrink(), nframes = 30)
 ```
 
+Each family animates a different attribute: fade the paint opacity, grow
+and shrink the size, drift, fly and manual the position, recolour the
+paint. All of them work with the four supported geoms.
+
+Two behaviours below come from gganimate itself and appear in its gifs
+as well. `enter_recolour()` and `exit_recolour()` set `colour` and
+`fill` together, and setting the aesthetic a geom does not paint makes
+tweenr coerce a logical column, which warns; pass `NA` for that
+aesthetic, as in `enter_recolour(colour = "white", fill = NA)` for the
+default point shape.
+[`enter_grow()`](https://gganimate.com/reference/enter_exit.html) and
+[`exit_shrink()`](https://gganimate.com/reference/enter_exit.html) do
+not change the geometry of a
+[`geom_ribbon()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html)
+or
+[`geom_area()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html)
+layer, so a ribbon that arrives is drawn at its full shape.
+
 ## Several layers at once
 
 Layers are animated independently, so you can stack them the way you
