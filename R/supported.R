@@ -11,7 +11,8 @@ supported_transitions <- c(
 )
 supported_shadows <- c(
   "ShadowNull",
-  "ShadowMark"
+  "ShadowMark",
+  "ShadowTrail"
 )
 supported_geoms <- c(
   "GeomPoint",
@@ -43,7 +44,11 @@ geom_is_grouped <- function(geom_class) {
 }
 
 # Pre-build: transition, view, shadow, and every layer geom.
-check_supported_prebuild <- function(plot, call = rlang::caller_env()) {
+check_supported_prebuild <- function(
+  plot,
+  nframes = 100L,
+  call = rlang::caller_env()
+) {
   problems <- character(0)
 
   tr <- plot$transition
@@ -83,10 +88,11 @@ check_supported_prebuild <- function(plot, call = rlang::caller_env()) {
         "Shadow {.cls {cls}} is not supported yet."
       ),
       i = cli::format_inline(
-        "Supported: {.fn shadow_mark} and {.fn shadow_null}."
+        "Supported: {.fn shadow_mark}, {.fn shadow_trail}, and {.fn shadow_null}."
       )
     )
   }
+  problems <- c(problems, trail_distance_problem(shadow, nframes))
 
   geoms <- vapply(plot$layers, function(l) class(l$geom)[1], character(1))
   bad <- unique(geoms[!geoms %in% supported_geoms])
@@ -132,6 +138,30 @@ check_supported_postbuild <- function(built, call = rlang::caller_env()) {
   }
 
   abort_problems(problems, call)
+}
+
+# `shadow_trail(distance =)` is a fraction of the animation, which
+# `ShadowTrail$train()` turns into a frame step with `round(nframes * distance)`.
+# A step of zero reaches `seq(by = 0)` and errors inside gganimate with "invalid
+# '(to - from)/by'", so reject it here instead. gganimate trains on the realised
+# frame count, which is the requested `nframes` or one more, and the larger of the
+# two is used so that only a distance sampling nothing either way is rejected.
+trail_distance_problem <- function(shadow, nframes) {
+  if (!inherits(shadow, "ShadowTrail")) {
+    return(character(0))
+  }
+  distance <- shadow$params$distance
+  if (round((nframes + 1L) * distance) > 0) {
+    return(character(0))
+  }
+  c(
+    x = cli::format_inline(
+      "{.code shadow_trail(distance = {distance})} spans less than one of {nframes} frames."
+    ),
+    i = cli::format_inline(
+      "Use a {.arg distance} of at least {signif(1 / nframes, 2)}, or animate more frames."
+    )
+  )
 }
 
 abort_problems <- function(problems, call) {

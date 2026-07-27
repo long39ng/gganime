@@ -16,6 +16,10 @@
   This shape comes up whenever a state swaps one element for another and no
   `enter_*()`/`exit_*()` is set, which is gganimate's default.
 
+* `shadow_trail()` is supported, so a breadcrumb trail of evenly spaced earlier
+  frames can be left behind the animation. `distance` sets the spacing and
+  `max_frames` caps how many marks are kept at once.
+
 * Bars keep their identity across a state boundary. A `geom_col()` or
   `geom_bar()` layer whose categories change between states previously redrew
   every bar as a new element, so bars that were present throughout blinked out

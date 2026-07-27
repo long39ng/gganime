@@ -37,6 +37,10 @@ gganimate::exit_shrink
 #' @export
 gganimate::shadow_mark
 
+#' @importFrom gganimate shadow_trail
+#' @export
+gganimate::shadow_trail
+
 #' @importFrom gganimate shadow_null
 #' @export
 gganimate::shadow_null

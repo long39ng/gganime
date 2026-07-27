@@ -48,11 +48,20 @@ make_faceted_raw_lines <- function() {
   )
 }
 
+# The visibility rule shadow_layer_union() takes, as build_shadow_unions() reads
+# it off the spec.
+mark_rule <- function(past = TRUE, future = FALSE) {
+  shadow_presence_rule("mark", list(past = past, future = future))
+}
+
+trail_rule <- function(max_frames = Inf) {
+  shadow_presence_rule("trail", list(max_frames = max_frames))
+}
+
 test_that("a grouped shadow keeps the panels of a shared group apart", {
   u <- shadow_layer_union(
     make_faceted_raw_lines(),
-    past = TRUE,
-    future = FALSE,
+    mark_rule(),
     nframes = 2,
     grouped = TRUE
   )
@@ -85,11 +94,81 @@ test_that("shadow_presence with past and future shows every frame but the mark's
   expect_equal(m[, 2], c(TRUE, FALSE, TRUE))
 })
 
+test_that("trail_presence shows every earlier sample", {
+  m <- trail_presence(c(1, 3, 5), nframes = 6, max_frames = Inf)
+  expect_equal(m[, 1], c(FALSE, rep(TRUE, 5)))
+  expect_equal(m[, 2], c(rep(FALSE, 3), TRUE, TRUE, TRUE))
+  expect_equal(m[, 3], c(rep(FALSE, 5), TRUE))
+})
+
+test_that("trail_presence drops a sample once max_frames newer ones exist", {
+  m <- trail_presence(c(1, 3, 5), nframes = 8, max_frames = 1)
+  expect_equal(m[, 1], c(FALSE, TRUE, TRUE, rep(FALSE, 5)))
+  expect_equal(m[, 2], c(rep(FALSE, 3), TRUE, TRUE, FALSE, FALSE, FALSE))
+  expect_equal(m[, 3], c(rep(FALSE, 5), TRUE, TRUE, TRUE))
+})
+
+test_that("trail_presence counts frames, not elements, in the window", {
+  # Two elements per sampled frame, so both elements of the older frame leave
+  # together once the newer frame is sampled.
+  m <- trail_presence(c(1, 1, 3, 3), nframes = 4, max_frames = 1)
+  expect_equal(m[3, ], c(TRUE, TRUE, FALSE, FALSE))
+  expect_equal(m[4, ], c(FALSE, FALSE, TRUE, TRUE))
+})
+
+test_that("a trail element is shown for a stretch of frames and then hidden", {
+  u <- shadow_layer_union(
+    make_raw_points(),
+    trail_rule(max_frames = 1),
+    nframes = 4,
+    grouped = FALSE
+  )
+  tracks <- gganime_element_tracks(
+    geom_adapter("GeomPoint"),
+    union = u$union,
+    frames = u$frames,
+    affines = identity_affines(ncol(u$union$presence)),
+    precision = 2,
+    ids = element_id(1, seq_len(ncol(u$union$presence))),
+    symbols = list(gridSVG.pch19 = list(circle = TRUE, factor = 0.375))
+  )
+  # Geometry is as constant as a mark's, so opacity is again the only track.
+  expect_equal(names(tracks[[1]]$tracks), "opacity")
+  expect_equal(tracks[[1]]$tracks$opacity, c(0, 1, 0, 0))
+  expect_equal(tracks[[2]]$tracks$opacity, c(0, 0, 1, 0))
+})
+
+test_that("build_shadow_unions reads the trail rule off the spec", {
+  spec <- list(
+    layers = list(list(geom_class = "GeomPoint")),
+    nframes = 4,
+    shadows = list(
+      type = "trail",
+      raw = list(make_raw_points()),
+      params = list(max_frames = 1)
+    )
+  )
+  u <- build_shadow_unions(spec)[[1]]
+  expect_equal(u$union$presence[, 1], c(FALSE, TRUE, FALSE, FALSE))
+})
+
+test_that("build_shadow_unions is all-NULL for a mark showing neither side", {
+  spec <- list(
+    layers = list(list(geom_class = "GeomPoint")),
+    nframes = 3,
+    shadows = list(
+      type = "mark",
+      raw = list(make_raw_points()),
+      params = list(past = FALSE, future = FALSE)
+    )
+  )
+  expect_equal(build_shadow_unions(spec), list(NULL))
+})
+
 test_that("shadow_layer_union drops marks that are never shown", {
   u <- shadow_layer_union(
     make_raw_points(),
-    past = TRUE,
-    future = FALSE,
+    mark_rule(),
     nframes = 3,
     grouped = FALSE
   )
@@ -103,8 +182,7 @@ test_that("shadow_layer_union returns NULL when nothing is ever shown", {
   raw <- make_raw_points()[1, , drop = FALSE]
   expect_null(shadow_layer_union(
     raw,
-    past = TRUE,
-    future = FALSE,
+    mark_rule(),
     nframes = 1,
     grouped = FALSE
   ))
@@ -113,8 +191,7 @@ test_that("shadow_layer_union returns NULL when nothing is ever shown", {
 test_that("shadow_layer_union frame_index is an integer vector for single geoms", {
   u <- shadow_layer_union(
     make_raw_points(),
-    past = FALSE,
-    future = TRUE,
+    mark_rule(past = FALSE, future = TRUE),
     nframes = 3,
     grouped = FALSE
   )
@@ -124,8 +201,7 @@ test_that("shadow_layer_union frame_index is an integer vector for single geoms"
 test_that("shadow_layer_union groups grouped geoms by (.frame, group)", {
   u <- shadow_layer_union(
     make_raw_lines(),
-    past = TRUE,
-    future = FALSE,
+    mark_rule(),
     nframes = 2,
     grouped = TRUE
   )
@@ -140,8 +216,7 @@ test_that("shadow_layer_union groups grouped geoms by (.frame, group)", {
 test_that("a visible shadow element yields constant geometry and an opacity track", {
   u <- shadow_layer_union(
     make_raw_points(),
-    past = TRUE,
-    future = FALSE,
+    mark_rule(),
     nframes = 3,
     grouped = FALSE
   )
@@ -162,8 +237,7 @@ test_that("a visible shadow element yields constant geometry and an opacity trac
 test_that("combine_shadow_union_data prepends shadow rows and offsets live groups", {
   shadow <- shadow_layer_union(
     make_raw_lines(),
-    past = TRUE,
-    future = FALSE,
+    mark_rule(),
     nframes = 2,
     grouped = TRUE
   )
@@ -187,8 +261,7 @@ test_that("shadow shape snapshot", {
   skip_if_not_installed("jsonlite")
   u <- shadow_layer_union(
     make_raw_points(),
-    past = TRUE,
-    future = TRUE,
+    mark_rule(future = TRUE),
     nframes = 3,
     grouped = FALSE
   )
@@ -247,6 +320,80 @@ test_that("a shadow mark is hidden before its frame and shown after (past)", {
   expect_equal(opacity[[1]], 0)
   expect_equal(opacity[[length(opacity)]], 1)
   expect_false(is.unsorted(opacity))
+})
+
+shadow_trail_plot <- function(distance = 0.25, max_frames = Inf) {
+  df <- data.frame(
+    x = c(1, 2, 3, 1, 2, 3, 2, 3, 4),
+    y = c(1, 2, 1, 3, 1, 2, 2, 3, 1),
+    s = rep(c("a", "b", "c"), each = 3)
+  )
+  ggplot(df, aes(x, y)) +
+    geom_point(size = 4) +
+    transition_states(s, transition_length = 1, state_length = 1) +
+    shadow_trail(
+      distance = distance,
+      max_frames = max_frames,
+      colour = "grey",
+      size = 2
+    )
+}
+
+test_that("anime() prepends trail elements that animate only opacity", {
+  w <- anime(shadow_trail_plot(), nframes = 8, fps = 10)
+  segs <- w$x$config$segments
+
+  opacity_only <- vapply(
+    segs,
+    function(s) identical(names(s$props), "opacity"),
+    logical(1)
+  )
+  # One trail element per sampled frame and point, leading the live elements.
+  expect_gt(sum(opacity_only), 3)
+  expect_true(all(opacity_only[seq_len(sum(opacity_only))]))
+
+  opacity <- unlist(segs[[1]]$props$opacity)
+  expect_equal(opacity[[1]], 0)
+  expect_equal(opacity[[length(opacity)]], 1)
+})
+
+test_that("max_frames hides a trail element again", {
+  w <- anime(shadow_trail_plot(max_frames = 1), nframes = 8, fps = 10)
+  opacity <- unlist(w$x$config$segments[[1]]$props$opacity)
+  # The oldest sample is dropped as soon as a newer one is taken.
+  expect_equal(opacity[[1]], 0)
+  expect_equal(opacity[[length(opacity)]], 0)
+  expect_true(any(opacity == 1))
+})
+
+test_that("anime() renders a line plot with a trail", {
+  la <- data.frame(
+    day = rep(1:4, 3),
+    temp = c(1, 3, 2, 4, 2, 4, 3, 5, 5, 3, 4, 2),
+    mon = rep(1:3, each = 4)
+  )
+  p <- ggplot(la, aes(day, temp)) +
+    geom_line(colour = "red") +
+    transition_time(mon) +
+    shadow_trail(distance = 0.4, colour = "grey")
+  w <- anime(p, nframes = 5, fps = 10)
+
+  segs <- w$x$config$segments
+  trail <- vapply(
+    segs,
+    function(s) identical(names(s$props), "opacity"),
+    logical(1)
+  )
+  # A sampled frame's row-groups each become their own polyline element.
+  expect_gt(sum(trail), 0)
+  expect_true(all(trail[seq_len(sum(trail))]))
+})
+
+test_that("a trail whose distance rounds to no frames is rejected", {
+  expect_snapshot(
+    anime(shadow_trail_plot(distance = 0.001), nframes = 8),
+    error = TRUE
+  )
 })
 
 test_that("anime() renders a line plot with future shadows", {

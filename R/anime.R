@@ -65,7 +65,7 @@ anime <- function(
     fps <- nframes / duration
   }
 
-  check_supported_prebuild(plot)
+  check_supported_prebuild(plot, nframes)
 
   plot$nframes <- nframes
   built <- ggplot2::ggplot_build(plot)

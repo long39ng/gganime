@@ -101,9 +101,9 @@ In Shiny, use `gganimeOutput()` and `renderGganime()`.
   `coord_flip()`.
 - `enter_*()` / `exit_*()`, `ease_aes()`, and per-frame labels in the
   title, subtitle, and caption.
-- `shadow_mark()`.
+- `shadow_mark()` and `shadow_trail()`.
 
 Anything else stops with a message naming the alternative. Current
 limits include non-linear coordinate systems (`coord_polar()`,
-`coord_radial()`, `coord_transform()`, `coord_sf()`), `shadow_wake()` /
-`shadow_trail()`, and `view_*()` other than `view_static()`.
+`coord_radial()`, `coord_transform()`, `coord_sf()`), `shadow_wake()`,
+and `view_*()` other than `view_static()`.

@@ -180,6 +180,21 @@ aq_shadow <- ggplot(airquality, aes(Day, Temp)) +
 anime(aq_shadow, nframes = 30)
 ```
 
+`shadow_trail()` keeps every nth frame instead, spacing the marks out in time
+rather than showing all of them. `distance` sets the spacing as a fraction of the
+animation, and `max_frames` caps how many marks are kept, so the oldest one drops
+away as a new one is added.
+
+```{r, eval = render_ok}
+aq_trail <- ggplot(airquality, aes(Day, Temp)) +
+  geom_point() +
+  transition_time(Month) +
+  shadow_trail(distance = 0.1, max_frames = 5, colour = "grey70") +
+  labs(title = "Month: {frame_time}")
+
+anime(aq_trail, nframes = 30)
+```
+
 ## Controlling the render
 
 gganime fixes the frame count and playback speed when you call `anime()`, the
@@ -226,9 +241,9 @@ In Shiny, pair `renderGganime()` in the server with `gganimeOutput()` in the UI.
   `coord_flip()`.
 - `enter_*()` and `exit_*()`, `ease_aes()`, and per-frame labels in the title,
   subtitle, and caption.
-- `shadow_mark()`.
+- `shadow_mark()` and `shadow_trail()`.
 
 Anything else stops with a message naming an alternative. Current limits include
 non-linear coordinate systems (`coord_polar()`, `coord_radial()`,
-`coord_transform()`, `coord_sf()`), `shadow_wake()` and `shadow_trail()`, and
+`coord_transform()`, `coord_sf()`), `shadow_wake()`, and
 `view_*()` other than `view_static()`.

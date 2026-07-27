@@ -35,7 +35,7 @@
       Error:
       ! This plot uses features gganime cannot render yet:
       x Shadow <ShadowWake> is not supported yet.
-      i Supported: `shadow_mark()` and `shadow_null()`.
+      i Supported: `shadow_mark()`, `shadow_trail()`, and `shadow_null()`.
 
 # a gganim with no transition is rejected
 

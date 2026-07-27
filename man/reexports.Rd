@@ -12,6 +12,7 @@
 \alias{exit_fade}
 \alias{exit_shrink}
 \alias{shadow_mark}
+\alias{shadow_trail}
 \alias{shadow_null}
 \alias{animate}
 \title{Objects exported from other packages}
@@ -21,6 +22,6 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{gganimate}{\code{\link[gganimate:animate]{animate()}}, \code{\link[gganimate:ease_aes]{ease_aes()}}, \code{\link[gganimate:enter_fade]{enter_fade()}}, \code{\link[gganimate:enter_grow]{enter_grow()}}, \code{\link[gganimate:exit_fade]{exit_fade()}}, \code{\link[gganimate:exit_shrink]{exit_shrink()}}, \code{\link[gganimate:shadow_mark]{shadow_mark()}}, \code{\link[gganimate:shadow_null]{shadow_null()}}, \code{\link[gganimate:transition_reveal]{transition_reveal()}}, \code{\link[gganimate:transition_states]{transition_states()}}, \code{\link[gganimate:transition_time]{transition_time()}}}
+  \item{gganimate}{\code{\link[gganimate:animate]{animate()}}, \code{\link[gganimate:ease_aes]{ease_aes()}}, \code{\link[gganimate:enter_fade]{enter_fade()}}, \code{\link[gganimate:enter_grow]{enter_grow()}}, \code{\link[gganimate:exit_fade]{exit_fade()}}, \code{\link[gganimate:exit_shrink]{exit_shrink()}}, \code{\link[gganimate:shadow_mark]{shadow_mark()}}, \code{\link[gganimate:shadow_null]{shadow_null()}}, \code{\link[gganimate:shadow_trail]{shadow_trail()}}, \code{\link[gganimate:transition_reveal]{transition_reveal()}}, \code{\link[gganimate:transition_states]{transition_states()}}, \code{\link[gganimate:transition_time]{transition_time()}}}
 }}
 

@@ -66,22 +66,33 @@ panel_scale_is_discrete <- function(scales) {
   length(scales) > 0L && isTRUE(scales[[1L]]$is_discrete())
 }
 
-# Shadow spec: NULL unless the plot carries a shadow_mark(). ShadowMark's train
-# hook has already stored the raw-phase rows (styled by the aesthetic dots) with
-# a `.frame` column per layer in `built$scene$shadow_params$raw`, so the spec
-# only forwards the consumable pieces. R/shadows.R turns these into elements.
+# Shadow spec: NULL unless the plot carries a shadow gganime renders. Both
+# ShadowMark's and ShadowTrail's train hook have already stored the rows the
+# shadow draws (styled by the aesthetic dots) with a `.frame` column per layer
+# in `built$scene$shadow_params$raw`, so the spec forwards those plus the
+# parameters the type's visibility rule needs. R/shadows.R turns them into
+# elements.
 build_shadow_spec <- function(built) {
-  shadow <- built$plot$shadow
-  if (is.null(shadow) || !inherits(shadow, "ShadowMark")) {
+  type <- shadow_type(built$plot$shadow)
+  if (is.null(type)) {
     return(NULL)
   }
   sp <- built$scene$shadow_params
-  list(
-    past = isTRUE(sp$past),
-    future = isTRUE(sp$future),
-    raw = sp$raw,
-    nframes = sp$nframes
+  params <- switch(
+    type,
+    mark = list(past = isTRUE(sp$past), future = isTRUE(sp$future)),
+    trail = list(max_frames = sp$max_frames)
   )
+  list(type = type, raw = sp$raw, nframes = sp$nframes, params = params)
+}
+
+# The spec's shadow type, or NULL for a plot with no shadow (or a shadow_null()).
+shadow_type <- function(shadow) {
+  if (inherits(shadow, "ShadowMark")) {
+    "mark"
+  } else if (inherits(shadow, "ShadowTrail")) {
+    "trail"
+  }
 }
 
 # Per-panel data ranges, keyed by PANEL level. The SVG rectangle and the affine
