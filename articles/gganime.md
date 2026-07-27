@@ -109,6 +109,23 @@ gives `frame_time`;
 gives `frame_along`. All three also provide `frame`, `nframes`, and
 `progress`.
 
+A label may span several lines. Each line is swapped on its own, so a
+static first line can sit above a changing second one:
+
+``` r
+
+aq_two_line <- ggplot(airquality, aes(Day, Temp)) +
+  geom_point() +
+  transition_time(Month) +
+  labs(title = "Temperature by day\nMonth: {frame_time}")
+
+anime(aq_two_line, nframes = 30)
+```
+
+The number of lines has to be the same in every frame. The text layout
+is taken from the first frame, so a label that gains or loses a line
+partway through is held at its first-frame text with a warning.
+
 ## Easing, entering, and exiting
 
 [`ease_aes()`](https://gganimate.com/reference/ease_aes.html) sets how
@@ -192,6 +209,23 @@ aq_shadow <- ggplot(airquality, aes(Day, Temp)) +
 anime(aq_shadow, nframes = 30)
 ```
 
+[`shadow_trail()`](https://gganimate.com/reference/shadow_trail.html)
+keeps every nth frame instead, spacing the marks out in time rather than
+showing all of them. `distance` sets the spacing as a fraction of the
+animation, and `max_frames` caps how many marks are kept, so the oldest
+one drops away as a new one is added.
+
+``` r
+
+aq_trail <- ggplot(airquality, aes(Day, Temp)) +
+  geom_point() +
+  transition_time(Month) +
+  shadow_trail(distance = 0.1, max_frames = 5, colour = "grey70") +
+  labs(title = "Month: {frame_time}")
+
+anime(aq_trail, nframes = 30)
+```
+
 ## Controlling the render
 
 gganime fixes the frame count and playback speed when you call
@@ -247,6 +281,9 @@ in the UI.
   [`transition_time()`](https://gganimate.com/reference/transition_time.html),
   [`transition_reveal()`](https://gganimate.com/reference/transition_reveal.html).
 - Geoms: points, lines and paths, bars and columns, areas and ribbons.
+- Point shapes: any pch R draws from a single shape – circles, squares,
+  triangles, diamonds – animates its size and outline width. The shapes
+  drawn from several parts (pch 3, 4, and 7 to 14) hold their size.
 - Several layers in one plot, including two of the same kind, and a
   static layer beside an animated one.
 - Facets:
@@ -264,7 +301,9 @@ in the UI.
 - `enter_*()` and `exit_*()`,
   [`ease_aes()`](https://gganimate.com/reference/ease_aes.html), and
   per-frame labels in the title, subtitle, and caption.
-- [`shadow_mark()`](https://gganimate.com/reference/shadow_mark.html).
+- [`shadow_mark()`](https://gganimate.com/reference/shadow_mark.html)
+  and
+  [`shadow_trail()`](https://gganimate.com/reference/shadow_trail.html).
 
 Anything else stops with a message naming an alternative. Current limits
 include non-linear coordinate systems
@@ -272,5 +311,4 @@ include non-linear coordinate systems
 [`coord_radial()`](https://ggplot2.tidyverse.org/reference/coord_radial.html),
 [`coord_transform()`](https://ggplot2.tidyverse.org/reference/coord_transform.html),
 [`coord_sf()`](https://ggplot2.tidyverse.org/reference/ggsf.html)),
-`shadow_wake()` and `shadow_trail()`, and `view_*()` other than
-`view_static()`.
+`shadow_wake()`, and `view_*()` other than `view_static()`.

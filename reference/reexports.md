@@ -13,6 +13,7 @@ to see their documentation.
   [`exit_shrink()`](https://gganimate.com/reference/enter_exit.html),
   [`shadow_mark()`](https://gganimate.com/reference/shadow_mark.html),
   [`shadow_null()`](https://gganimate.com/reference/shadow_null.html),
+  [`shadow_trail()`](https://gganimate.com/reference/shadow_trail.html),
   [`transition_reveal()`](https://gganimate.com/reference/transition_reveal.html),
   [`transition_states()`](https://gganimate.com/reference/transition_states.html),
   [`transition_time()`](https://gganimate.com/reference/transition_time.html)

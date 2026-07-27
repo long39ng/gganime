@@ -30,6 +30,7 @@ so existing plot code runs unchanged.
   [`exit_fade`](https://long39ng.github.io/gganime/reference/reexports.md)
   [`exit_shrink`](https://long39ng.github.io/gganime/reference/reexports.md)
   [`shadow_mark`](https://long39ng.github.io/gganime/reference/reexports.md)
+  [`shadow_trail`](https://long39ng.github.io/gganime/reference/reexports.md)
   [`shadow_null`](https://long39ng.github.io/gganime/reference/reexports.md)
   [`animate`](https://long39ng.github.io/gganime/reference/reexports.md)
   : Objects exported from other packages

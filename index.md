@@ -102,6 +102,9 @@ and
   [`transition_time()`](https://gganimate.com/reference/transition_time.html),
   [`transition_reveal()`](https://gganimate.com/reference/transition_reveal.html).
 - Geoms: points, lines and paths, bars and columns, areas and ribbons.
+- Point shapes: any pch R draws from a single shape – circles, squares,
+  triangles, diamonds – animates its size and outline width. The shapes
+  drawn from several parts (pch 3, 4, and 7 to 14) hold their size.
 - Several layers in one plot, including two of the same kind, and a
   static layer beside an animated one.
 - Facets:
@@ -119,7 +122,9 @@ and
 - `enter_*()` / `exit_*()`,
   [`ease_aes()`](https://gganimate.com/reference/ease_aes.html), and
   per-frame labels in the title, subtitle, and caption.
-- [`shadow_mark()`](https://gganimate.com/reference/shadow_mark.html).
+- [`shadow_mark()`](https://gganimate.com/reference/shadow_mark.html)
+  and
+  [`shadow_trail()`](https://gganimate.com/reference/shadow_trail.html).
 
 Anything else stops with a message naming the alternative. Current
 limits include non-linear coordinate systems
@@ -127,5 +132,4 @@ limits include non-linear coordinate systems
 [`coord_radial()`](https://ggplot2.tidyverse.org/reference/coord_radial.html),
 [`coord_transform()`](https://ggplot2.tidyverse.org/reference/coord_transform.html),
 [`coord_sf()`](https://ggplot2.tidyverse.org/reference/ggsf.html)),
-`shadow_wake()` / `shadow_trail()`, and `view_*()` other than
-`view_static()`.
+`shadow_wake()`, and `view_*()` other than `view_static()`.

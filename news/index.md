@@ -27,6 +27,30 @@
   element for another and no `enter_*()`/`exit_*()` is set, which is
   gganimate’s default.
 
+- [`shadow_trail()`](https://gganimate.com/reference/shadow_trail.html)
+  is supported, so a breadcrumb trail of evenly spaced earlier frames
+  can be left behind the animation. `distance` sets the spacing and
+  `max_frames` caps how many marks are kept at once.
+
+- A multi-line title, subtitle, or caption is animated a line at a time
+  instead of being held at its first-frame text. A line whose text never
+  changes is left as it was drawn. A label that gains or loses a line
+  partway through is still held, since the text layout comes from the
+  first frame.
+
+- Point shapes other than circles now animate their size. Squares,
+  triangles and diamonds (pch 0, 2, 5, 6, 15, 17, 18, 22, 23, 24, 25)
+  grow and shrink with a mapped `size` the way the round shapes always
+  did. The shapes drawn from several parts (pch 3, 4, and 7 to 14) still
+  hold their size, and the warning that says so now names them and is
+  issued once per layer.
+
+- A mapped `stroke` animates a point’s outline width, and an outline is
+  drawn at the width R would draw it at. Outlines were previously about
+  1.6 times too thick at small sizes and too thin at large ones –
+  visible on the filled shapes, pch 21 to 25, where the outline and the
+  fill are different colours.
+
 - Bars keep their identity across a state boundary. A
   [`geom_col()`](https://ggplot2.tidyverse.org/reference/geom_bar.html)
   or
@@ -97,5 +121,6 @@
   [`coord_radial()`](https://ggplot2.tidyverse.org/reference/coord_radial.html),
   [`coord_transform()`](https://ggplot2.tidyverse.org/reference/coord_transform.html),
   [`coord_sf()`](https://ggplot2.tidyverse.org/reference/ggsf.html)),
-  `shadow_wake()` and `shadow_trail()`, and `view_*()` other than
-  `view_static()`.
+  `shadow_wake()` and
+  [`shadow_trail()`](https://gganimate.com/reference/shadow_trail.html),
+  and `view_*()` other than `view_static()`.
