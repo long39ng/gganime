@@ -44,8 +44,8 @@ gif <- animate(
   fps = 20,
   width = 640,
   height = 480,
-  renderer = gifski_renderer()
+  renderer = gganimate::gifski_renderer()
 )
 gifout <- file.path("tests", "manual", "point-shadow-mark.gif")
-anim_save(gifout, gif)
+gganimate::anim_save(gifout, gif)
 message("wrote ", normalizePath(gifout))
