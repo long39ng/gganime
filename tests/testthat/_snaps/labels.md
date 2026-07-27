@@ -1,3 +1,12 @@
+# annotate_labels freezes a label whose lines and tspans disagree
+
+    Code
+      elements <- annotate_labels(doc, labels)
+    Condition
+      Warning:
+      title is frozen at its first-frame text.
+      i It has 2 lines but the rendered label has 1.
+
 # build_timeline emits an anime_text segment for a label element
 
     Code
@@ -21,12 +30,13 @@
         }
       ]
 
-# anime() freezes a multi-line label with a warning
+# anime() freezes a label whose line count varies
 
     Code
-      invisible(anime(time_plot(title = "Line one\nYear {frame_time}"), nframes = 4))
+      invisible(anime(time_plot(title = "Year {frame_time}{ifelse(frame > 2, '\nmore', '')}"),
+      nframes = 4))
     Condition
       Warning:
-      Multi-line title is frozen at its first-frame text.
-      i A single text swap cannot drive a multi-line label.
+      title is frozen at its first-frame text.
+      i Its number of lines varies across frames.
 

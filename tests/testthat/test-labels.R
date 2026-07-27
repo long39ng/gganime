@@ -16,9 +16,31 @@ test_that("label_is_static and dynamic_label_names separate varying labels", {
   expect_equal(dynamic_label_names(labels), "title")
 })
 
-test_that("label_id namespaces the element", {
+test_that("label_lines splits each frame's label into a fixed line count", {
+  expect_equal(label_lines(c("a", "b")), matrix(c("a", "b"), nrow = 1))
+  expect_equal(
+    label_lines(c("one\nx", "one\ny")),
+    matrix(c("one", "x", "one", "y"), nrow = 2)
+  )
+  expect_null(label_lines(c("a", "a\nb")))
+})
+
+test_that("label_id namespaces the element and its lines", {
   expect_equal(label_id("title"), "label_title")
   expect_equal(label_id("subtitle"), "label_subtitle")
+  expect_equal(label_id("title", 2), "label_title_2")
+})
+
+test_that("annotate_labels freezes a label whose lines and tspans disagree", {
+  doc <- xml2::read_xml(
+    "<svg><g id='plot.title.1'><text><tspan>Year 1</tspan></text></g></svg>"
+  )
+  labels <- list(
+    title = list(values = c("Year 1\nA", "Year 2\nB"), dynamic = TRUE)
+  )
+
+  expect_snapshot(elements <- annotate_labels(doc, labels))
+  expect_length(elements, 0L)
 })
 
 test_that("build_timeline emits an anime_text segment for a label element", {
@@ -49,6 +71,23 @@ test_that("build_timeline emits an anime_text segment for a label element", {
 # --- integration -----------------------------------------------------------
 
 library(ggplot2)
+
+# The selectors of the timeline segments that carry a discrete text swap.
+text_segment_selectors <- function(w) {
+  segs <- w$x$config$segments
+  is_text <- vapply(
+    segs,
+    function(s) {
+      any(vapply(
+        s$props,
+        function(p) is.list(p) && identical(p$type, "text"),
+        logical(1)
+      ))
+    },
+    logical(1)
+  )
+  vapply(segs[is_text], `[[`, character(1), "selector")
+}
 
 time_plot <- function(title = "Year: {frame_time}", ...) {
   df <- data.frame(
@@ -82,23 +121,8 @@ test_that("anime() animates varying labels and leaves constant ones static", {
     nframes = 5
   )
 
-  segs <- w$x$config$segments
-  text_selectors <- vapply(
-    segs,
-    function(s) {
-      is_text <- vapply(
-        s$props,
-        function(p) is.list(p) && identical(p$type, "text"),
-        logical(1)
-      )
-      if (any(is_text)) s$selector else NA_character_
-    },
-    character(1)
-  )
-  text_selectors <- text_selectors[!is.na(text_selectors)]
-
   expect_setequal(
-    text_selectors,
+    text_segment_selectors(w),
     c("[data-animejs-id='label_title']", "[data-animejs-id='label_subtitle']")
   )
   # the tspan is annotated in place, keeping its positioning attributes
@@ -109,10 +133,40 @@ test_that("anime() animates varying labels and leaves constant ones static", {
   )
 })
 
-test_that("anime() freezes a multi-line label with a warning", {
+test_that("anime() drives a multi-line label one line at a time", {
+  w <- anime(time_plot(title = "Year {frame_time}\nFrame {frame}"), nframes = 4)
+
+  expect_setequal(
+    text_segment_selectors(w),
+    c("[data-animejs-id='label_title_1']", "[data-animejs-id='label_title_2']")
+  )
+  # each line's tspan carries its own id, and its first-frame text
+  expect_match(
+    w$x$svg,
+    "<tspan[^>]*data-animejs-id=\"label_title_1\"[^>]*>Year 1<",
+    perl = TRUE
+  )
+  expect_match(
+    w$x$svg,
+    "<tspan[^>]*data-animejs-id=\"label_title_2\"[^>]*>Frame 1<",
+    perl = TRUE
+  )
+})
+
+test_that("anime() leaves a constant line of a multi-line label alone", {
+  w <- anime(time_plot(title = "Line one\nYear {frame_time}"), nframes = 4)
+
+  expect_equal(
+    text_segment_selectors(w),
+    "[data-animejs-id='label_title_2']"
+  )
+  expect_no_match(w$x$svg, "label_title_1", fixed = TRUE)
+})
+
+test_that("anime() freezes a label whose line count varies", {
   expect_snapshot(
     invisible(anime(
-      time_plot(title = "Line one\nYear {frame_time}"),
+      time_plot(title = "Year {frame_time}{ifelse(frame > 2, '\nmore', '')}"),
       nframes = 4
     ))
   )

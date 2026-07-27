@@ -20,6 +20,11 @@
   frames can be left behind the animation. `distance` sets the spacing and
   `max_frames` caps how many marks are kept at once.
 
+* A multi-line title, subtitle, or caption is animated a line at a time instead
+  of being held at its first-frame text. A line whose text never changes is left
+  as it was drawn. A label that gains or loses a line partway through is still
+  held, since the text layout comes from the first frame.
+
 * Bars keep their identity across a state boundary. A `geom_col()` or
   `geom_bar()` layer whose categories change between states previously redrew
   every bar as a new element, so bars that were present throughout blinked out

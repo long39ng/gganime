@@ -109,6 +109,22 @@ Each transition provides different variables. `transition_states()` gives
 `transition_reveal()` gives `frame_along`. All three also provide `frame`,
 `nframes`, and `progress`.
 
+A label may span several lines. Each line is swapped on its own, so a static
+first line can sit above a changing second one:
+
+```{r, eval = render_ok}
+aq_two_line <- ggplot(airquality, aes(Day, Temp)) +
+  geom_point() +
+  transition_time(Month) +
+  labs(title = "Temperature by day\nMonth: {frame_time}")
+
+anime(aq_two_line, nframes = 30)
+```
+
+The number of lines has to be the same in every frame. The text layout is taken
+from the first frame, so a label that gains or loses a line partway through is
+held at its first-frame text with a warning.
+
 ## Easing, entering, and exiting
 
 `ease_aes()` sets how an aesthetic moves between values across a transition. The
