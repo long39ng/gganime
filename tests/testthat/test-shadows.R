@@ -130,7 +130,7 @@ test_that("a trail element is shown for a stretch of frames and then hidden", {
     affines = identity_affines(ncol(u$union$presence)),
     precision = 2,
     ids = element_id(1, seq_len(ncol(u$union$presence))),
-    symbols = list(gridSVG.pch19 = list(circle = TRUE, factor = 0.375))
+    symbols = pch_symbols(19)
   )
   # Geometry is as constant as a mark's, so opacity is again the only track.
   expect_equal(names(tracks[[1]]$tracks), "opacity")
@@ -227,7 +227,7 @@ test_that("a visible shadow element yields constant geometry and an opacity trac
     affines = identity_affines(ncol(u$union$presence)),
     precision = 2,
     ids = element_id(1, seq_len(ncol(u$union$presence))),
-    symbols = list(gridSVG.pch19 = list(circle = TRUE, factor = 0.375))
+    symbols = pch_symbols(19)
   )
   # Geometry is constant across frames, so only opacity is kept per element.
   expect_equal(names(tracks[[1]]$tracks), "opacity")

@@ -25,6 +25,17 @@
   as it was drawn. A label that gains or loses a line partway through is still
   held, since the text layout comes from the first frame.
 
+* Point shapes other than circles now animate their size. Squares, triangles and
+  diamonds (pch 0, 2, 5, 6, 15, 17, 18, 22, 23, 24, 25) grow and shrink with a
+  mapped `size` the way the round shapes always did. The shapes drawn from
+  several parts (pch 3, 4, and 7 to 14) still hold their size, and the warning
+  that says so now names them and is issued once per layer.
+
+* A mapped `stroke` animates a point's outline width, and an outline is drawn at
+  the width R would draw it at. Outlines were previously about 1.6 times too
+  thick at small sizes and too thin at large ones -- visible on the filled
+  shapes, pch 21 to 25, where the outline and the fill are different colours.
+
 * Bars keep their identity across a state boundary. A `geom_col()` or
   `geom_bar()` layer whose categories change between states previously redrew
   every bar as a new element, so bars that were present throughout blinked out

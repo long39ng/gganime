@@ -1,6 +1,6 @@
 # gridSVG export and the xml2 post-pass: build the data->SVG affine per panel,
-# annotate data elements, inline circular pch to <circle>, and tidy the root.
-# All gridSVG contact is isolated here so a different backend could swap in.
+# annotate data elements, inline single-shape pch as that shape, and tidy the
+# root. All gridSVG contact is isolated here so a different backend could swap in.
 
 #' Export the reference gtable to an SVG document
 #'
@@ -247,44 +247,140 @@ panel_viewport_rect <- function(exp, group, panel) {
   exp$coords[[keys[[length(keys)]]]]
 }
 
-# Radius scaling per pch symbol: single-<circle> symbols carry a factor
-# (circle r / viewBox width) so a point's SVG radius is factor * font-size.
+# Geometry per pch symbol, keyed by symbol id. gridSVG draws each pch inside a
+# square viewBox scaled to the point's font size, so a symbol built from a single
+# shape can be redrawn as that shape at the point's own position: record the kind
+# and every coordinate divided by the viewBox width, and a point recovers user
+# units by multiplying back by its font size. A composite pch (a circle and a
+# cross, say) has no single shape to inline, so it keeps its `<use>`.
 symbol_table <- function(doc) {
-  syms <- xml2::xml_find_all(doc, ".//symbol")
   tab <- list()
-  for (s in syms) {
-    id <- xml2::xml_attr(s, "id")
-    vb <- xml2::xml_attr(s, "viewBox")
-    circles <- xml2::xml_find_all(s, "./circle")
-    if (length(circles) == 1L && !is.na(vb)) {
-      vbw <- as.numeric(strsplit(trimws(vb), "\\s+")[[1]])[[3]]
-      r <- as.numeric(xml2::xml_attr(circles[[1]], "r"))
-      tab[[id]] <- list(circle = TRUE, factor = r / vbw)
-    } else {
-      tab[[id]] <- list(circle = FALSE, factor = NA_real_)
-    }
+  for (s in xml2::xml_find_all(doc, ".//symbol")) {
+    tab[[xml2::xml_attr(s, "id")]] <- symbol_entry(s)
   }
   tab
 }
 
-# Replace a <use> point with an equivalent <circle>, carrying its presentation
-# attributes plus the animation id. `(x, y)` on the <use> is the visible centre.
-inline_circle <- function(node, r, layer_index, id) {
-  keep <- c("fill", "stroke", "fill-opacity", "stroke-opacity", "stroke-width")
-  attrs <- list(
-    cx = xml2::xml_attr(node, "x"),
-    cy = xml2::xml_attr(node, "y"),
-    r = format(r, trim = TRUE)
+# A symbol that is left as a `<use>`: position and colour still animate, size
+# does not.
+frozen_symbol <- function() {
+  list(kind = "use", geom = NULL, vbw = NA_real_)
+}
+
+symbol_is_frozen <- function(sym) {
+  identical(sym$kind, "use")
+}
+
+symbol_entry <- function(symbol) {
+  vb <- xml2::xml_attr(symbol, "viewBox")
+  children <- xml2::xml_children(symbol)
+  if (is.na(vb) || length(children) != 1L) {
+    return(frozen_symbol())
+  }
+  vbw <- as.numeric(strsplit(trimws(vb), "\\s+")[[1]])[[3]]
+  shape <- children[[1]]
+  kind <- xml2::xml_name(shape)
+  num <- function(a) as.numeric(xml2::xml_attr(shape, a)) / vbw
+  geom <- switch(
+    kind,
+    circle = list(cx = num("cx"), cy = num("cy"), r = num("r")),
+    rect = list(
+      x = num("x"),
+      y = num("y"),
+      width = num("width"),
+      height = num("height")
+    ),
+    polyline = ,
+    polygon = list(
+      points = parse_points(xml2::xml_attr(shape, "points")) / vbw
+    ),
+    NULL
   )
-  for (a in keep) {
+  if (is.null(geom) || anyNA(unlist(geom))) {
+    return(frozen_symbol())
+  }
+  list(kind = kind, geom = geom, vbw = vbw)
+}
+
+# An SVG `points` string as a two-column vertex matrix.
+parse_points <- function(s) {
+  matrix(
+    as.numeric(strsplit(trimws(s), "[,[:space:]]+")[[1]]),
+    ncol = 2,
+    byrow = TRUE
+  )
+}
+
+# A symbol's attribute values for a point drawn at `(px, py)` with symbol scale
+# `scale` (the `<use>`'s width). Vectorised over frames: `px`, `py` and `scale`
+# may be length-nframes vectors, and each returned attribute matches. Absent
+# frames come in as `NA` and go out as `NA`, for the caller to hold.
+symbol_geometry <- function(sym, px, py, scale, precision = 3) {
+  g <- sym$geom
+  switch(
+    sym$kind,
+    circle = list(
+      cx = px + g$cx * scale,
+      cy = py + g$cy * scale,
+      r = g$r * scale
+    ),
+    rect = list(
+      x = px + g$x * scale,
+      y = py + g$y * scale,
+      width = g$width * scale,
+      height = g$height * scale
+    ),
+    polyline = ,
+    polygon = list(
+      points = vapply(
+        seq_along(px),
+        function(f) {
+          vertices_to_points(
+            cbind(
+              px[f] + g$points[, 1] * scale[f],
+              py[f] + g$points[, 2] * scale[f]
+            ),
+            precision
+          )
+        },
+        character(1)
+      )
+    ),
+    # A frozen pch keeps the `<use>`, whose own (x, y) is the visible centre.
+    list(x = px, y = py)
+  )
+}
+
+# Replace a <use> point with the shape its symbol is built from, carrying the
+# presentation attributes plus the animation id. `(x, y)` on the <use> is the
+# visible centre and `width` is the symbol scale.
+inline_symbol <- function(node, sym, layer_index, id) {
+  scale <- as.numeric(xml2::xml_attr(node, "width"))
+  geom <- symbol_geometry(
+    sym,
+    as.numeric(xml2::xml_attr(node, "x")),
+    as.numeric(xml2::xml_attr(node, "y")),
+    scale
+  )
+  attrs <- lapply(geom, function(v) {
+    if (is.numeric(v)) format(v, trim = TRUE) else v
+  })
+  for (a in c("fill", "stroke", "fill-opacity", "stroke-opacity")) {
     v <- xml2::xml_attr(node, a)
     if (!is.na(v)) {
       attrs[[a]] <- v
     }
   }
+  # gridSVG writes a <use>'s stroke-width pre-divided by the symbol scale,
+  # because the viewBox transform scales it back up inside the symbol. Nothing
+  # scales it outside, so multiply it back.
+  sw <- as.numeric(xml2::xml_attr(node, "stroke-width"))
+  if (!is.na(sw)) {
+    attrs[["stroke-width"]] <- format(sw * scale / sym$vbw, trim = TRUE)
+  }
   attrs[["data-animejs-id"]] <- id
   attrs[["data-layer"]] <- as.character(layer_index)
-  do.call(xml2::xml_add_sibling, c(list(node, "circle"), attrs))
+  do.call(xml2::xml_add_sibling, c(list(node, sym$kind), attrs))
   xml2::xml_remove(node)
 }
 

@@ -59,17 +59,7 @@ transient_segments <- function(widget) {
 
 # The props animated on the transient elements, as one sorted set.
 transient_props <- function(widget) {
-  segments <- transient_segments(widget)
-  sort(unique(unlist(lapply(segments, function(s) names(s$props)))))
-}
-
-# Every value one prop is animated to on one element, in frame order.
-track <- function(segment, prop) {
-  vapply(segment$props[[prop]], function(k) as.character(k$to), character(1))
-}
-
-numeric_track <- function(segment, prop) {
-  as.numeric(track(segment, prop))
+  animated_props(transient_segments(widget))
 }
 
 # The elements that arrive, in union order. An arriving element is authored
@@ -143,12 +133,15 @@ test_that("grow animates the radius of a transient point", {
     fps = 10
   )
 
-  expect_equal(transient_props(w), c("opacity", "r"))
-  # `size = 0` leaves the stroke term of the radius, so an arriving point starts at
-  # the width of its own outline.
+  # grow scales `stroke` alongside `size`, so the outline width tweens with the
+  # radius.
+  expect_equal(transient_props(w), c("opacity", "r", "stroke-width"))
   r <- numeric_track(last_entering(w), "r")
   expect_gt(max(r), 2 * min(r))
   expect_equal(r[[length(r)]], max(r))
+  sw <- numeric_track(last_entering(w), "stroke-width")
+  expect_lt(min(sw), max(sw) / 2)
+  expect_equal(sw[[length(sw)]], max(sw))
 })
 
 test_that("drift animates a transient point in from an offset position", {

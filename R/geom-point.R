@@ -3,8 +3,8 @@
 
 # --- generics --------------------------------------------------------------
 
-# Annotate a layer's SVG nodes: assign animation ids and, for circular pch,
-# inline the <use> as a <circle> so radius can tween.
+# Annotate a layer's SVG nodes: assign animation ids and, for a pch built from a
+# single shape, inline the <use> as that shape so its geometry can tween.
 gganime_annotate <- function(geom, ...) {
   UseMethod("gganime_annotate")
 }
@@ -34,12 +34,19 @@ gganime_annotate.GeomPoint <- function(
 ) {
   nodes <- point_nodes(doc, layer_index, panels)
   info <- point_symbol_info(union_data, symbols)
+  frozen <- vapply(info, symbol_is_frozen, logical(1))
+  if (any(frozen)) {
+    shapes <- sort(unique(as.integer(union_data$shape[frozen])))
+    cli::cli_warn(c(
+      "Point shapes drawn from several parts keep a fixed size.",
+      i = "Affected pch: {.val {shapes}}. They animate in position and colour only."
+    ))
+  }
   for (k in seq_along(nodes)) {
-    if (info[[k]]$is_circle) {
-      w <- as.numeric(xml2::xml_attr(nodes[[k]], "width"))
-      inline_circle(nodes[[k]], info[[k]]$factor * w, layer_index, ids[k])
-    } else {
+    if (frozen[k]) {
       set_element_id(nodes[[k]], layer_index, ids[k])
+    } else {
+      inline_symbol(nodes[[k]], info[[k]], layer_index, ids[k])
     }
   }
   invisible(doc)
@@ -57,22 +64,17 @@ gganime_element_tracks.GeomPoint <- function(
   ...
 ) {
   info <- point_symbol_info(union$union_data, symbols)
-  if (!all(vapply(info, `[[`, logical(1), "is_circle"))) {
-    cli::cli_warn(
-      "Non-circular point shapes keep a fixed size; only circular pch animate size."
-    )
-  }
-
   nframes <- nrow(union$presence)
   lapply(seq_len(ncol(union$presence)), function(k) {
     present <- union$presence[, k]
     affine <- affines[[k]]
-    is_circle <- info[[k]]$is_circle
+    sym <- info[[k]]
     # The reference row decides which colour channels this element paints with;
-    # `shape` is constant per element, so the channel set is too.
+    # `shape` is constant per element, so the channel set and the symbol are too.
     channels <- point_paint(union$union_data[k, , drop = FALSE])
 
-    cx <- cy <- r <- fill_op <- stroke_op <- rep(NA_real_, nframes)
+    px <- py <- scale <- stroke_w <- rep(NA_real_, nframes)
+    fill_op <- stroke_op <- rep(NA_real_, nframes)
     fill <- stroke <- rep(NA_character_, nframes)
     for (f in seq_len(nframes)) {
       if (!present[f]) {
@@ -80,14 +82,10 @@ gganime_element_tracks.GeomPoint <- function(
       }
       row <- frames[[f]][union$frame_index[[f]][k], , drop = FALSE]
       centre <- affine_xy(affine, row$x, row$y)
-      cx[f] <- centre[, 1]
-      cy[f] <- centre[, 2]
-      r[f] <- point_radius_px(
-        row$size,
-        row$stroke,
-        info[[k]]$factor,
-        affine$res
-      )
+      px[f] <- centre[, 1]
+      py[f] <- centre[, 2]
+      scale[f] <- point_symbol_px(row$size, row$stroke, affine$res)
+      stroke_w[f] <- point_stroke_px(row$stroke, affine$res)
       paint <- point_paint(row)
       fill[f] <- paint$fill
       stroke[f] <- paint$stroke
@@ -95,13 +93,13 @@ gganime_element_tracks.GeomPoint <- function(
       stroke_op[f] <- paint$stroke_opacity
     }
 
-    xy <- if (is_circle) c("cx", "cy") else c("x", "y")
-    tracks <- list()
-    tracks[[xy[1]]] <- round_track(hold_absent(cx, present), precision)
-    tracks[[xy[2]]] <- round_track(hold_absent(cy, present), precision)
-    if (is_circle) {
-      tracks$r <- round_track(hold_absent(r, present), precision)
-    }
+    # The symbol's own kind fixes the geometry tracks: `cx`/`cy`/`r` for a disc,
+    # `x`/`y`/`width`/`height` for a square, `points` for a triangle or diamond,
+    # and the `<use>`'s `x`/`y` alone for a pch that stayed frozen.
+    tracks <- lapply(
+      symbol_geometry(sym, px, py, scale, precision),
+      function(v) round_track(hold_absent(v, present), precision)
+    )
     # Animate only the channels the shape paints with. The default pch 19 draws
     # its disc *and* its outline in `colour`, so leaving `stroke` behind holds a
     # stale ring around a point whose fill has already tweened on; conversely,
@@ -121,6 +119,15 @@ gganime_element_tracks.GeomPoint <- function(
         hold_absent(stroke_op, present),
         precision
       )
+      # Only an inlined shape carries its outline width in user units; a frozen
+      # `<use>` keeps the pre-divided one gridSVG wrote, which is not ours to
+      # tween.
+      if (!symbol_is_frozen(sym)) {
+        tracks[["stroke-width"]] <- round_track(
+          hold_absent(stroke_w, present),
+          precision
+        )
+      }
     }
     tracks$opacity <- presence_opacity(present)
 
@@ -147,24 +154,26 @@ select_point_nodes <- function(doc, panel, layer_index) {
   panel_data_nodes(doc, "use", panel, layer_index)
 }
 
-# Per-element pch symbol resolution: circular pch inline to <circle>.
+# The symbol each element is drawn from, in union order. A pch with no symbol in
+# the export keeps its <use>.
 point_symbol_info <- function(union_data, symbols) {
   shapes <- as.integer(union_data$shape)
   lapply(shapes, function(sh) {
-    sym <- symbols[[sprintf("gridSVG.pch%d", sh)]]
-    if (!is.null(sym) && isTRUE(sym$circle)) {
-      list(is_circle = TRUE, factor = sym$factor)
-    } else {
-      list(is_circle = FALSE, factor = NA_real_)
-    }
+    symbols[[sprintf("gridSVG.pch%d", sh)]] %||% frozen_symbol()
   })
 }
 
-# SVG radius in user units. font-size = size * .pt + stroke * .stroke/2 (points);
-# the device converts at res/72 (big points); factor = symbol r / viewBox width.
-point_radius_px <- function(size, stroke, factor, res) {
-  fontsize <- size * ggplot2::.pt + stroke * ggplot2::.stroke / 2
-  factor * fontsize * res / 72
+# The symbol scale in SVG user units, which is the <use>'s width: font-size =
+# size * .pt + stroke * .stroke/2 (points), converted at res/72 (big points). A
+# normalised symbol coordinate multiplies by this.
+point_symbol_px <- function(size, stroke, res) {
+  (size * ggplot2::.pt + stroke * ggplot2::.stroke / 2) * res / 72
+}
+
+# Outline width in SVG user units. grid measures lwd in 1/96 inch and one user
+# unit is 1/res inch, so the `stroke` aesthetic converts at res/96.
+point_stroke_px <- function(stroke, res) {
+  stroke * ggplot2::.stroke / 2 * res / 96
 }
 
 # The colours a point is painted with, plus each channel's opacity, matching
